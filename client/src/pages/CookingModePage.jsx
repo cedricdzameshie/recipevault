@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import CookingHeader from "../components/cooking/CookingHeader";
 import CookingStepCard from "../components/cooking/CookingStepCard";
@@ -120,39 +120,44 @@ export default function CookingModePage() {
 
   const totalSteps = recipe?.steps.length ?? 0;
 
-  const requestedStep = Number(searchParams.get("step") || "1");
-  const safeInitialStepIndex =
-    totalSteps > 0
-      ? Math.min(Math.max(requestedStep - 1, 0), totalSteps - 1)
-      : 0;
+const requestedStep = Number(searchParams.get("step") || "1");
+const safeInitialStepIndex =
+  totalSteps > 0
+    ? Math.min(Math.max(requestedStep - 1, 0), totalSteps - 1)
+    : 0;
 
-  const [currentStepIndex, setCurrentStepIndex] = useState(safeInitialStepIndex);
-  const [isFinished, setIsFinished] = useState(false);
+const [hasStartedNavigating, setHasStartedNavigating] = useState(false);
+const [currentStepIndex, setCurrentStepIndex] = useState(safeInitialStepIndex);
+const [isFinished, setIsFinished] = useState(false);
 
-  useEffect(() => {
-    setCurrentStepIndex(safeInitialStepIndex);
-    setIsFinished(false);
-  }, [safeInitialStepIndex, id]);
+const activeStepIndex = hasStartedNavigating
+  ? currentStepIndex
+  : safeInitialStepIndex;
+
+
 
   const currentStep = useMemo(() => {
-    if (!recipe || !recipe.steps.length) return null;
-    return recipe.steps[currentStepIndex];
-  }, [recipe, currentStepIndex]);
+  if (!recipe || !recipe.steps.length) return null;
+  return recipe.steps[activeStepIndex];
+}, [recipe, activeStepIndex]);
 
   function handlePrevious() {
-    setCurrentStepIndex((prev) => Math.max(prev - 1, 0));
-    setIsFinished(false);
-  }
+  setHasStartedNavigating(true);
+  setCurrentStepIndex((prev) => Math.max(prev - 1, 0));
+  setIsFinished(false);
+}
 
   function handleNext() {
-    if (!recipe) return;
+  if (!recipe) return;
 
-    if (currentStepIndex < recipe.steps.length - 1) {
-      setCurrentStepIndex((prev) => prev + 1);
-    } else {
-      setIsFinished(true);
-    }
+  setHasStartedNavigating(true);
+
+  if (activeStepIndex < recipe.steps.length - 1) {
+    setCurrentStepIndex((prev) => prev + 1);
+  } else {
+    setIsFinished(true);
   }
+}
 
   if (!recipe) {
     return (
@@ -231,7 +236,7 @@ export default function CookingModePage() {
     );
   }
 
-  const currentStepNumber = currentStepIndex + 1;
+  const currentStepNumber = activeStepIndex + 1;
   const editUrl = `/recipes/${recipe.id}/edit?returnTo=cook&step=${currentStepNumber}`;
 
   return (
@@ -277,8 +282,8 @@ export default function CookingModePage() {
       <CookingControls
         onPrevious={handlePrevious}
         onNext={handleNext}
-        canGoPrevious={currentStepIndex > 0}
-        canGoNext={currentStepIndex < totalSteps - 1}
+        canGoPrevious={activeStepIndex > 0}
+        canGoNext={activeStepIndex < totalSteps - 1}
       />
 
       <div className="flex flex-wrap gap-3 md:hidden">
