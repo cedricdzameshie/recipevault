@@ -119,7 +119,11 @@ export default function EditRecipePage() {
   if (!recipe) {
     return (
       <section>
-        <h1 className="text-3xl font-semibold">Recipe Not Found</h1>
+        <PageHeader
+          title="Recipe Not Found"
+          backTo="/recipes"
+          backLabel="Back to Recipes"
+        />
       </section>
     );
   }
@@ -129,6 +133,10 @@ export default function EditRecipePage() {
       <PageHeader
         title={`Edit ${recipe.title}`}
         description="Update recipe details and continue where you left off."
+        backTo={cancelTo}
+        backLabel={
+          returnTo === "cook" && step ? "Back to Cooking" : "Back to Recipe"
+        }
       />
 
       <RecipeForm

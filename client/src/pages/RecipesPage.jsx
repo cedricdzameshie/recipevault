@@ -26,10 +26,12 @@ export default function RecipesPage() {
   ];
 
   return (
-    <section>
+    <section className="space-y-6">
       <PageHeader
         title="Recipes"
-        description="Your saved recipes"
+        description="Browse and manage your saved recipes."
+        backTo="/dashboard"
+        backLabel="Back to Dashboard"
         action={
           <Link to="/recipes/new">
             <Button>Add Recipe</Button>

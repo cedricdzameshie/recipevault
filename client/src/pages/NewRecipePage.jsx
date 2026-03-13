@@ -7,6 +7,8 @@ export default function NewRecipePage() {
       <PageHeader
         title="New Recipe"
         description="Create and organize a new recipe."
+        backTo="/recipes"
+        backLabel="Back to Recipes"
       />
 
       <RecipeForm />

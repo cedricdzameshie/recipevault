@@ -1,6 +1,7 @@
 import { Link, useParams } from "react-router-dom";
 import Button from "../components/common/Button";
 import Card from "../components/common/Card";
+import PageHeader from "../components/common/PageHeader";
 
 const recipeData = {
   1: {
@@ -97,29 +98,34 @@ export default function RecipeDetailPage() {
   if (!recipe) {
     return (
       <section>
-        <h1 className="text-3xl font-semibold">Recipe Not Found</h1>
+        <PageHeader
+          title="Recipe Not Found"
+          backTo="/recipes"
+          backLabel="Back to Recipes"
+        />
       </section>
     );
   }
 
   return (
     <section className="space-y-6">
-      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-        <div>
-          <h1 className="text-3xl font-semibold">{recipe.title}</h1>
-          <p className="mt-2 text-stone-600">{recipe.description}</p>
-        </div>
+      <PageHeader
+        title={recipe.title}
+        description={recipe.description}
+        backTo="/recipes"
+        backLabel="Back to Recipes"
+        action={
+          <div className="flex flex-wrap gap-3">
+            <Link to={`/recipes/${recipe.id}/cook?step=1`}>
+              <Button>Start Cooking</Button>
+            </Link>
 
-        <div className="flex flex-wrap gap-3">
-          <Link to={`/recipes/${recipe.id}/cook?step=1`}>
-            <Button>Start Cooking</Button>
-          </Link>
-
-          <Link to={`/recipes/${recipe.id}/edit`}>
-            <Button variant="secondary">Edit</Button>
-          </Link>
-        </div>
-      </div>
+            <Link to={`/recipes/${recipe.id}/edit`}>
+              <Button variant="secondary">Edit</Button>
+            </Link>
+          </div>
+        }
+      />
 
       <Card>
         <div className="grid gap-4 sm:grid-cols-3">
@@ -176,7 +182,7 @@ export default function RecipeDetailPage() {
                 {step.instruction}
               </p>
 
-              {step.ingredients?.length > 0 && (
+              {step.ingredients?.length > 0 ? (
                 <div className="mt-4 rounded-2xl bg-stone-50 p-4">
                   <p className="text-sm font-medium text-stone-700">
                     Ingredients Used In This Step
@@ -196,19 +202,19 @@ export default function RecipeDetailPage() {
                     ))}
                   </ul>
                 </div>
-              )}
+              ) : null}
 
-              {step.prepNote && (
+              {step.prepNote ? (
                 <p className="mt-3 text-sm text-stone-600">
                   Prep note: {step.prepNote}
                 </p>
-              )}
+              ) : null}
 
-              {step.timerMinutes && (
+              {step.timerMinutes ? (
                 <p className="mt-2 text-sm text-stone-600">
                   Timer: {step.timerMinutes} min
                 </p>
-              )}
+              ) : null}
             </li>
           ))}
         </ol>
