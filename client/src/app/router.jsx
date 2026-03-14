@@ -10,6 +10,7 @@ import CookingModePage from "../pages/CookingModePage";
 import FavoritesPage from "../pages/FavoritesPage";
 import FoldersPage from "../pages/FoldersPage";
 import NotFoundPage from "../pages/NotFoundPage";
+import RemindersPage from "../pages/RemindersPage";
 
 export const router = createBrowserRouter([
   { path: "/login", element: <LoginPage /> },
@@ -26,6 +27,7 @@ export const router = createBrowserRouter([
       { path: "recipes/:id/cook", element: <CookingModePage /> },
       { path: "favorites", element: <FavoritesPage /> },
       { path: "folders", element: <FoldersPage /> },
+      { path: "reminders", element: <RemindersPage /> },
     ],
   },
   { path: "*", element: <NotFoundPage /> },
