@@ -6,24 +6,53 @@ datasource db {
   provider = "postgresql"
 }
 
+model Folder {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now())
+
+  recipes   Recipe[]
+}
+
 model Recipe {
-  id          String   @id @default(uuid())
+  id          String       @id @default(uuid())
   title       String
   description String?
   servings    Int?
   prepTime    Int?
   cookTime    Int?
   notes       String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  folderId    String?
+  folder      Folder?      @relation(fields: [folderId], references: [id], onDelete: SetNull)
+
+  ingredients Ingredient[]
+  steps       Step[]
+  reminders   Reminder[]
 }
 
-model Folder {
+model Ingredient {
   id        String   @id @default(uuid())
   name      String
-
+  quantity  String?
+  unit      String?
+  position  Int
   createdAt DateTime @default(now())
+
+  recipeId  String
+  recipe    Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+}
+
+model Step {
+  id          String   @id @default(uuid())
+  instruction String
+  position    Int
+  createdAt   DateTime @default(now())
+
+  recipeId    String
+  recipe      Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
 }
 
 model Reminder {
@@ -31,6 +60,8 @@ model Reminder {
   title     String
   detail    String?
   complete  Boolean  @default(false)
-
   createdAt DateTime @default(now())
+
+  recipeId  String?
+  recipe    Recipe?  @relation(fields: [recipeId], references: [id], onDelete: SetNull)
 }
