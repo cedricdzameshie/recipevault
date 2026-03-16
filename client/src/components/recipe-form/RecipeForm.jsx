@@ -65,11 +65,30 @@ function normalizeInitialData(initialData) {
     },
     ingredients:
       initialData.ingredients?.length > 0
-        ? initialData.ingredients
+        ? initialData.ingredients.map((ingredient) => ({
+            id: ingredient.id || createId(),
+            quantity: ingredient.quantity || "",
+            unit: ingredient.unit || "",
+            ingredient: ingredient.name || ingredient.ingredient || "",
+          }))
         : [createEmptyIngredient()],
     steps:
       initialData.steps?.length > 0
-        ? initialData.steps
+        ? initialData.steps.map((step) => ({
+            id: step.id || createId(),
+            instruction: step.instruction || "",
+            prepNote: step.prepNote || "",
+            timerMinutes: step.timerMinutes || "",
+            ingredients:
+              step.ingredients?.length > 0
+                ? step.ingredients.map((ingredient) => ({
+                    id: ingredient.id || createId(),
+                    quantity: ingredient.quantity || "",
+                    unit: ingredient.unit || "",
+                    ingredient: ingredient.name || ingredient.ingredient || "",
+                  }))
+                : [createEmptyStepIngredient()],
+          }))
         : [createEmptyStep()],
   };
 }

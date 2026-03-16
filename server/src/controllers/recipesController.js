@@ -114,3 +114,26 @@ export async function createRecipe(req, res) {
     res.status(500).json({ error: "Failed to create recipe" });
   }
 }
+
+export async function deleteRecipe(req, res) {
+  try {
+    const { id } = req.params;
+
+    const existingRecipe = await prisma.recipe.findUnique({
+      where: { id },
+    });
+
+    if (!existingRecipe) {
+      return res.status(404).json({ error: "Recipe not found" });
+    }
+
+    await prisma.recipe.delete({
+      where: { id },
+    });
+
+    res.json({ message: "Recipe deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting recipe:", error);
+    res.status(500).json({ error: "Failed to delete recipe" });
+  }
+}

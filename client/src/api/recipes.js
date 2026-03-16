@@ -42,3 +42,17 @@ export async function fetchRecipeById(id) {
 
   return data;
 }
+
+export async function deleteRecipeById(id) {
+  const response = await fetch(`${API_BASE_URL}/recipes/${id}`, {
+    method: "DELETE",
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.error || "Failed to delete recipe");
+  }
+
+  return data;
+}

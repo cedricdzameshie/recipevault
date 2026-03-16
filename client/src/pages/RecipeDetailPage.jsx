@@ -1,15 +1,17 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import Button from "../components/common/Button";
 import Card from "../components/common/Card";
 import PageHeader from "../components/common/PageHeader";
-import { fetchRecipeById } from "../api/recipes";
+import { fetchRecipeById, deleteRecipeById } from "../api/recipes";
 
 export default function RecipeDetailPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
 
   const [recipe, setRecipe] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -45,6 +47,25 @@ export default function RecipeDetailPage() {
       isMounted = false;
     };
   }, [id]);
+
+  async function handleDeleteRecipe() {
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${recipe.title}"?`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setIsDeleting(true);
+      await deleteRecipeById(recipe.id);
+      navigate("/recipes");
+    } catch (err) {
+      console.error("Failed to delete recipe:", err);
+      alert(err.message || "Failed to delete recipe");
+    } finally {
+      setIsDeleting(false);
+    }
+  }
 
   if (isLoading) {
     return (
@@ -87,6 +108,15 @@ export default function RecipeDetailPage() {
             <Link to={`/recipes/${recipe.id}/edit`}>
               <Button variant="secondary">Edit</Button>
             </Link>
+
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={handleDeleteRecipe}
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </Button>
           </div>
         }
       />
