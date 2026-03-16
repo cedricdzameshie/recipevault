@@ -6,16 +6,20 @@ import DashboardContinueCooking from "../components/dashboard/DashboardContinueC
 import DashboardFolders from "../components/dashboard/DashboardFolders";
 import DashboardReminders from "../components/dashboard/DashboardReminders";
 import { fetchRecipes } from "../api/recipes";
+import { fetchReminders } from "../api/reminders";
 
 export default function DashboardPage() {
   const [recipes, setRecipes] = useState([]);
+  const [reminders, setReminders] = useState([]);
   const [isLoadingRecipes, setIsLoadingRecipes] = useState(true);
+  const [isLoadingReminders, setIsLoadingReminders] = useState(true);
   const [recipesError, setRecipesError] = useState("");
+  const [remindersError, setRemindersError] = useState("");
 
   useEffect(() => {
     let isMounted = true;
 
-    async function loadDashboardData() {
+    async function loadRecipes() {
       try {
         setIsLoadingRecipes(true);
         setRecipesError("");
@@ -38,7 +42,31 @@ export default function DashboardPage() {
       }
     }
 
-    loadDashboardData();
+    async function loadReminders() {
+      try {
+        setIsLoadingReminders(true);
+        setRemindersError("");
+
+        const data = await fetchReminders();
+
+        if (isMounted) {
+          setReminders(data);
+        }
+      } catch (err) {
+        console.error("Failed to load dashboard reminders:", err);
+
+        if (isMounted) {
+          setRemindersError(err.message || "Failed to load reminders");
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingReminders(false);
+        }
+      }
+    }
+
+    loadRecipes();
+    loadReminders();
 
     return () => {
       isMounted = false;
@@ -49,12 +77,14 @@ export default function DashboardPage() {
     return [...recipes]
       .sort(
         (a, b) =>
-          new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt)
+          new Date(b.updatedAt || b.createdAt) -
+          new Date(a.updatedAt || a.createdAt)
       )
       .slice(0, 3);
   }, [recipes]);
 
   const continueCookingRecipe = recentRecipes[0] || null;
+  const activeReminders = reminders.filter((reminder) => !reminder.complete);
 
   return (
     <section className="space-y-6">
@@ -73,7 +103,12 @@ export default function DashboardPage() {
       />
 
       <DashboardFolders />
-      <DashboardReminders />
+
+      <DashboardReminders
+        reminders={activeReminders}
+        isLoading={isLoadingReminders}
+        error={remindersError}
+      />
     </section>
   );
 }

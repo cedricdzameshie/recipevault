@@ -4,11 +4,18 @@ import PageHeader from "../components/common/PageHeader";
 import Button from "../components/common/Button";
 import Card from "../components/common/Card";
 import Input from "../components/common/Input";
-import { fetchFolders, createFolder } from "../api/folders";
+import {
+  fetchFolders,
+  createFolder,
+  updateFolder,
+  deleteFolderById,
+} from "../api/folders";
 
 export default function FoldersPage() {
   const [folders, setFolders] = useState([]);
   const [newFolderName, setNewFolderName] = useState("");
+  const [editingFolderId, setEditingFolderId] = useState(null);
+  const [editingName, setEditingName] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState("");
@@ -68,11 +75,60 @@ export default function FoldersPage() {
     }
   }
 
+  function handleStartEdit(folder) {
+    setEditingFolderId(folder.id);
+    setEditingName(folder.name);
+  }
+
+  async function handleSaveEdit(folderId) {
+    const trimmed = editingName.trim();
+    if (!trimmed) return;
+
+    try {
+      setError("");
+
+      const updated = await updateFolder(folderId, { name: trimmed });
+
+      setFolders((prev) =>
+        prev.map((folder) => (folder.id === folderId ? updated : folder))
+      );
+
+      setEditingFolderId(null);
+      setEditingName("");
+    } catch (err) {
+      console.error("Failed to update folder:", err);
+      setError(err.message || "Failed to update folder");
+    }
+  }
+
+  function handleCancelEdit() {
+    setEditingFolderId(null);
+    setEditingName("");
+  }
+
+  async function handleDeleteFolder(folderId) {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this folder?"
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setError("");
+      await deleteFolderById(folderId);
+
+      setFolders((prev) => prev.filter((folder) => folder.id !== folderId));
+    } catch (err) {
+      console.error("Failed to delete folder:", err);
+      setError(err.message || "Failed to delete folder");
+    }
+  }
+
   return (
     <section className="space-y-6">
       <PageHeader
         title="Folders"
-        description="Create and organize recipe folders."
+        description="Create, rename, and organize recipe folders."
         backTo="/dashboard"
         backLabel="Back to Dashboard"
       />
@@ -114,50 +170,78 @@ export default function FoldersPage() {
       ) : (
         <div className="space-y-4">
           {folders.map((folder) => {
+            const isEditing = editingFolderId === folder.id;
             const recipeCount = folder.recipes?.length || 0;
 
             return (
               <Card key={folder.id}>
                 <div className="space-y-4">
-                  <div>
-                    <h2 className="text-lg font-semibold text-stone-900">
-                      {folder.name}
-                    </h2>
-                    <p className="text-sm text-stone-600">
-                      {recipeCount} recipe{recipeCount === 1 ? "" : "s"}
-                    </p>
-                  </div>
-
-                  {recipeCount > 0 ? (
+                  {isEditing ? (
+                    <Input
+                      label="Edit Folder Name"
+                      name="editFolderName"
+                      value={editingName}
+                      onChange={(e) => setEditingName(e.target.value)}
+                      placeholder="Folder name"
+                    />
+                  ) : (
                     <div className="space-y-2">
-                      <p className="text-xs font-medium uppercase tracking-wide text-stone-500">
-                        Recipes in this folder
+                      <h2 className="text-lg font-semibold text-stone-900">
+                        {folder.name}
+                      </h2>
+
+                      <p className="text-sm text-stone-600">
+                        {recipeCount} recipe{recipeCount === 1 ? "" : "s"}
                       </p>
 
-                      <ul className="space-y-2">
-                        {folder.recipes.slice(0, 4).map((recipe) => (
-                          <li key={recipe.id}>
-                            <Link
-                              to={`/recipes/${recipe.id}`}
-                              className="text-sm text-stone-700 underline-offset-2 hover:text-stone-900 hover:underline"
-                            >
-                              {recipe.title}
-                            </Link>
-                          </li>
-                        ))}
-                      </ul>
-
-                      {recipeCount > 4 ? (
-                        <p className="text-xs text-stone-500">
-                          + {recipeCount - 4} more
+                      {recipeCount > 0 ? (
+                        <ul className="space-y-1">
+                          {folder.recipes.slice(0, 4).map((recipe) => (
+                            <li key={recipe.id}>
+                              <Link
+                                to={`/recipes/${recipe.id}`}
+                                className="text-sm text-stone-700 underline-offset-2 hover:text-stone-900 hover:underline"
+                              >
+                                {recipe.title}
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-sm text-stone-500">
+                          No recipes in this folder yet.
                         </p>
-                      ) : null}
+                      )}
                     </div>
-                  ) : (
-                    <p className="text-sm text-stone-500">
-                      No recipes in this folder yet.
-                    </p>
                   )}
+
+                  <div className="flex flex-wrap gap-3">
+                    {isEditing ? (
+                      <>
+                        <Button onClick={() => handleSaveEdit(folder.id)}>
+                          Save
+                        </Button>
+                        <Button variant="secondary" onClick={handleCancelEdit}>
+                          Cancel
+                        </Button>
+                      </>
+                    ) : (
+                      <Button
+                        variant="secondary"
+                        onClick={() => handleStartEdit(folder)}
+                      >
+                        Rename
+                      </Button>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteFolder(folder.id)}
+                      className="inline-flex items-center justify-center rounded-xl border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-700 transition hover:bg-red-50"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
               </Card>
             );

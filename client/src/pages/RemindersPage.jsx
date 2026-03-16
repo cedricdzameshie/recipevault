@@ -1,29 +1,21 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import PageHeader from "../components/common/PageHeader";
 import Button from "../components/common/Button";
 import Card from "../components/common/Card";
 import Input from "../components/common/Input";
 import Textarea from "../components/common/Textarea";
-
-function createId() {
-  return crypto.randomUUID();
-}
+import {
+  fetchReminders,
+  createReminder,
+  updateReminder,
+  deleteReminderById,
+} from "../api/reminders";
 
 export default function RemindersPage() {
-  const [reminders, setReminders] = useState([
-    {
-      id: createId(),
-      title: "Check baking staples",
-      detail: "Flour, sugar, butter, and eggs",
-      isComplete: false,
-    },
-    {
-      id: createId(),
-      title: "Submit bakery receipts",
-      detail: "Don’t forget this week’s business purchases",
-      isComplete: false,
-    },
-  ]);
+  const [reminders, setReminders] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isCreating, setIsCreating] = useState(false);
+  const [error, setError] = useState("");
 
   const [newReminder, setNewReminder] = useState({
     title: "",
@@ -36,6 +28,39 @@ export default function RemindersPage() {
     detail: "",
   });
 
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadReminders() {
+      try {
+        setIsLoading(true);
+        setError("");
+
+        const data = await fetchReminders();
+
+        if (isMounted) {
+          setReminders(data);
+        }
+      } catch (err) {
+        console.error("Failed to load reminders:", err);
+
+        if (isMounted) {
+          setError(err.message || "Failed to load reminders");
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadReminders();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   function handleNewReminderChange(e) {
     const { name, value } = e.target;
     setNewReminder((prev) => ({
@@ -44,7 +69,7 @@ export default function RemindersPage() {
     }));
   }
 
-  function handleAddReminder(e) {
+  async function handleAddReminder(e) {
     e.preventDefault();
 
     const title = newReminder.title.trim();
@@ -52,27 +77,34 @@ export default function RemindersPage() {
 
     if (!title) return;
 
-    setReminders((prev) => [
-      ...prev,
-      {
-        id: createId(),
+    try {
+      setIsCreating(true);
+      setError("");
+
+      const createdReminder = await createReminder({
         title,
         detail,
-        isComplete: false,
-      },
-    ]);
+      });
 
-    setNewReminder({
-      title: "",
-      detail: "",
-    });
+      setReminders((prev) => [createdReminder, ...prev]);
+
+      setNewReminder({
+        title: "",
+        detail: "",
+      });
+    } catch (err) {
+      console.error("Failed to create reminder:", err);
+      setError(err.message || "Failed to create reminder");
+    } finally {
+      setIsCreating(false);
+    }
   }
 
   function handleStartEdit(reminder) {
     setEditingReminderId(reminder.id);
     setEditingReminder({
-      title: reminder.title,
-      detail: reminder.detail,
+      title: reminder.title || "",
+      detail: reminder.detail || "",
     });
   }
 
@@ -84,29 +116,35 @@ export default function RemindersPage() {
     }));
   }
 
-  function handleSaveEdit(reminderId) {
+  async function handleSaveEdit(reminderId) {
     const title = editingReminder.title.trim();
     const detail = editingReminder.detail.trim();
 
     if (!title) return;
 
-    setReminders((prev) =>
-      prev.map((reminder) =>
-        reminder.id === reminderId
-          ? {
-              ...reminder,
-              title,
-              detail,
-            }
-          : reminder
-      )
-    );
+    try {
+      setError("");
 
-    setEditingReminderId(null);
-    setEditingReminder({
-      title: "",
-      detail: "",
-    });
+      const updated = await updateReminder(reminderId, {
+        title,
+        detail,
+      });
+
+      setReminders((prev) =>
+        prev.map((reminder) =>
+          reminder.id === reminderId ? updated : reminder
+        )
+      );
+
+      setEditingReminderId(null);
+      setEditingReminder({
+        title: "",
+        detail: "",
+      });
+    } catch (err) {
+      console.error("Failed to update reminder:", err);
+      setError(err.message || "Failed to update reminder");
+    }
   }
 
   function handleCancelEdit() {
@@ -117,18 +155,41 @@ export default function RemindersPage() {
     });
   }
 
-  function handleDeleteReminder(reminderId) {
-    setReminders((prev) => prev.filter((reminder) => reminder.id !== reminderId));
+  async function handleDeleteReminder(reminderId) {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this reminder?"
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setError("");
+      await deleteReminderById(reminderId);
+
+      setReminders((prev) =>
+        prev.filter((reminder) => reminder.id !== reminderId)
+      );
+    } catch (err) {
+      console.error("Failed to delete reminder:", err);
+      setError(err.message || "Failed to delete reminder");
+    }
   }
 
-  function handleToggleComplete(reminderId) {
-    setReminders((prev) =>
-      prev.map((reminder) =>
-        reminder.id === reminderId
-          ? { ...reminder, isComplete: !reminder.isComplete }
-          : reminder
-      )
-    );
+  async function handleToggleComplete(reminder) {
+    try {
+      setError("");
+
+      const updated = await updateReminder(reminder.id, {
+        complete: !reminder.complete,
+      });
+
+      setReminders((prev) =>
+        prev.map((item) => (item.id === reminder.id ? updated : item))
+      );
+    } catch (err) {
+      console.error("Failed to toggle reminder:", err);
+      setError(err.message || "Failed to update reminder");
+    }
   }
 
   return (
@@ -160,114 +221,134 @@ export default function RemindersPage() {
           />
 
           <div className="flex justify-end">
-            <Button type="submit">Add Reminder</Button>
+            <Button type="submit" disabled={isCreating}>
+              {isCreating ? "Adding..." : "Add Reminder"}
+            </Button>
           </div>
         </form>
       </Card>
 
-      <div className="space-y-4">
-        {reminders.map((reminder) => {
-          const isEditing = editingReminderId === reminder.id;
+      {error ? (
+        <Card>
+          <p className="text-sm text-red-600">{error}</p>
+        </Card>
+      ) : null}
 
-          return (
-            <Card key={reminder.id}>
-              <div className="space-y-4">
-                {isEditing ? (
-                  <div className="space-y-4">
-                    <Input
-                      label="Edit Reminder Title"
-                      name="title"
-                      value={editingReminder.title}
-                      onChange={handleEditingChange}
-                      placeholder="Reminder title"
-                    />
+      {isLoading ? (
+        <Card>
+          <p className="text-sm text-stone-600">Loading reminders...</p>
+        </Card>
+      ) : reminders.length === 0 ? (
+        <Card>
+          <p className="text-sm text-stone-600">No reminders yet.</p>
+        </Card>
+      ) : (
+        <div className="space-y-4">
+          {reminders.map((reminder) => {
+            const isEditing = editingReminderId === reminder.id;
 
-                    <Textarea
-                      label="Edit Details"
-                      name="detail"
-                      value={editingReminder.detail}
-                      onChange={handleEditingChange}
-                      placeholder="Reminder details"
-                      rows={3}
-                    />
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <h2
-                          className={`text-lg font-semibold ${
-                            reminder.isComplete
-                              ? "text-stone-500 line-through"
-                              : "text-stone-900"
-                          }`}
-                        >
-                          {reminder.title}
-                        </h2>
+            return (
+              <Card key={reminder.id}>
+                <div className="space-y-4">
+                  {isEditing ? (
+                    <div className="space-y-4">
+                      <Input
+                        label="Edit Reminder Title"
+                        name="title"
+                        value={editingReminder.title}
+                        onChange={handleEditingChange}
+                        placeholder="Reminder title"
+                      />
 
-                        {reminder.detail ? (
-                          <p
-                            className={`mt-1 text-sm ${
-                              reminder.isComplete
-                                ? "text-stone-400"
-                                : "text-stone-600"
+                      <Textarea
+                        label="Edit Details"
+                        name="detail"
+                        value={editingReminder.detail}
+                        onChange={handleEditingChange}
+                        placeholder="Reminder details"
+                        rows={3}
+                      />
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <h2
+                            className={`text-lg font-semibold ${
+                              reminder.complete
+                                ? "text-stone-500 line-through"
+                                : "text-stone-900"
                             }`}
                           >
-                            {reminder.detail}
-                          </p>
+                            {reminder.title}
+                          </h2>
+
+                          {reminder.detail ? (
+                            <p
+                              className={`mt-1 text-sm ${
+                                reminder.complete
+                                  ? "text-stone-400"
+                                  : "text-stone-600"
+                              }`}
+                            >
+                              {reminder.detail}
+                            </p>
+                          ) : null}
+                        </div>
+
+                        {reminder.complete ? (
+                          <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-medium text-green-800">
+                            Complete
+                          </span>
                         ) : null}
                       </div>
-
-                      {reminder.isComplete ? (
-                        <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-medium text-green-800">
-                          Complete
-                        </span>
-                      ) : null}
                     </div>
-                  </div>
-                )}
-
-                <div className="flex flex-wrap gap-3">
-                  {isEditing ? (
-                    <>
-                      <Button onClick={() => handleSaveEdit(reminder.id)}>
-                        Save
-                      </Button>
-                      <Button variant="secondary" onClick={handleCancelEdit}>
-                        Cancel
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <Button
-                        variant="secondary"
-                        onClick={() => handleStartEdit(reminder)}
-                      >
-                        Edit
-                      </Button>
-
-                      <Button
-                        variant="secondary"
-                        onClick={() => handleToggleComplete(reminder.id)}
-                      >
-                        {reminder.isComplete ? "Mark Incomplete" : "Mark Complete"}
-                      </Button>
-                    </>
                   )}
 
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteReminder(reminder.id)}
-                    className="inline-flex items-center justify-center rounded-xl border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-700 transition hover:bg-red-50"
-                  >
-                    Delete
-                  </button>
+                  <div className="flex flex-wrap gap-3">
+                    {isEditing ? (
+                      <>
+                        <Button onClick={() => handleSaveEdit(reminder.id)}>
+                          Save
+                        </Button>
+                        <Button variant="secondary" onClick={handleCancelEdit}>
+                          Cancel
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Button
+                          variant="secondary"
+                          onClick={() => handleStartEdit(reminder)}
+                        >
+                          Edit
+                        </Button>
+
+                        <Button
+                          variant="secondary"
+                          onClick={() => handleToggleComplete(reminder)}
+                        >
+                          {reminder.complete
+                            ? "Mark Incomplete"
+                            : "Mark Complete"}
+                        </Button>
+                      </>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteReminder(reminder.id)}
+                      className="inline-flex items-center justify-center rounded-xl border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-700 transition hover:bg-red-50"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
-              </div>
-            </Card>
-          );
-        })}
-      </div>
+              </Card>
+            );
+          })}
+        </div>
+      )}
     </section>
   );
 }

@@ -30,3 +30,35 @@ export async function createFolder(folderData) {
 
   return data;
 }
+
+export async function updateFolder(id, folderData) {
+  const response = await fetch(`${API_BASE_URL}/folders/${id}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(folderData),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.error || "Failed to update folder");
+  }
+
+  return data;
+}
+
+export async function deleteFolderById(id) {
+  const response = await fetch(`${API_BASE_URL}/folders/${id}`, {
+    method: "DELETE",
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.error || "Failed to delete folder");
+  }
+
+  return data;
+}

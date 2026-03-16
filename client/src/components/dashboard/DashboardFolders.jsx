@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Card from "../common/Card";
 import Button from "../common/Button";
-import DashboardSection from "./DashboardSection";
 import { fetchFolders } from "../../api/folders";
 
 export default function DashboardFolders() {
@@ -44,41 +43,55 @@ export default function DashboardFolders() {
   }, []);
 
   return (
-    <DashboardSection
-      title="Folders"
-      action={
-        <Link to="/folders">
-          <Button variant="secondary">View All</Button>
-        </Link>
-      }
-    >
-      {isLoading ? (
-        <Card>
-          <p className="text-sm text-stone-600">Loading folders...</p>
-        </Card>
-      ) : error ? (
-        <Card>
-          <p className="text-sm text-red-600">{error}</p>
-        </Card>
-      ) : folders.length === 0 ? (
-        <Card>
-          <p className="text-sm text-stone-600">No folders yet.</p>
-        </Card>
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {folders.map((folder) => (
-            <Card key={folder.id}>
-              <div className="space-y-2">
-                <h3 className="text-lg font-medium text-stone-900">{folder.name}</h3>
-                <p className="text-sm text-stone-600">
-                  {folder.recipes?.length || 0} recipe
-                  {(folder.recipes?.length || 0) === 1 ? "" : "s"}
-                </p>
-              </div>
-            </Card>
-          ))}
+    <Card>
+      <div className="space-y-4">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-sm font-medium uppercase tracking-wide text-green-700">
+              Folders
+            </p>
+            <h2 className="mt-1 text-xl font-semibold text-stone-900">
+              Keep recipes organized
+            </h2>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <Link to="/folders">
+              <Button variant="secondary">Manage</Button>
+            </Link>
+          </div>
         </div>
-      )}
-    </DashboardSection>
+
+        {isLoading ? (
+          <p className="text-sm text-stone-600">Loading folders...</p>
+        ) : error ? (
+          <p className="text-sm text-red-600">{error}</p>
+        ) : folders.length === 0 ? (
+          <p className="text-sm text-stone-600">
+            No folders yet. Create one to start organizing recipes.
+          </p>
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {folders.map((folder) => {
+              const recipeCount = folder.recipes?.length || 0;
+
+              return (
+                <div
+                  key={folder.id}
+                  className="rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3"
+                >
+                  <p className="text-sm font-semibold text-stone-900">
+                    {folder.name}
+                  </p>
+                  <p className="mt-1 text-xs text-stone-600">
+                    {recipeCount} recipe{recipeCount === 1 ? "" : "s"}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </Card>
   );
 }
