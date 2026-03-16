@@ -43,6 +43,24 @@ export async function fetchRecipeById(id) {
   return data;
 }
 
+export async function updateRecipe(id, recipeData) {
+  const response = await fetch(`${API_BASE_URL}/recipes/${id}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(recipeData),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.error || "Failed to update recipe");
+  }
+
+  return data;
+}
+
 export async function deleteRecipeById(id) {
   const response = await fetch(`${API_BASE_URL}/recipes/${id}`, {
     method: "DELETE",
