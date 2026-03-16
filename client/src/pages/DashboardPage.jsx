@@ -1,116 +1,79 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import DashboardWelcome from "../components/dashboard/DashboardWelcome";
 import DashboardQuickActions from "../components/dashboard/DashboardQuickActions";
-import DashboardSection from "../components/dashboard/DashboardSection";
 import DashboardRecipePreview from "../components/dashboard/DashboardRecipePreview";
-import DashboardFolders from "../components/dashboard/DashboardFolders";
 import DashboardContinueCooking from "../components/dashboard/DashboardContinueCooking";
+import DashboardFolders from "../components/dashboard/DashboardFolders";
 import DashboardReminders from "../components/dashboard/DashboardReminders";
+import { fetchRecipes } from "../api/recipes";
 
 export default function DashboardPage() {
-  const [showContinueCooking, setShowContinueCooking] = useState(true);
+  const [recipes, setRecipes] = useState([]);
+  const [isLoadingRecipes, setIsLoadingRecipes] = useState(true);
+  const [recipesError, setRecipesError] = useState("");
 
-  const continueCooking = {
-    id: 1,
-    title: "Sourdough Bread",
-    stepNumber: 2,
-  };
+  useEffect(() => {
+    let isMounted = true;
 
-  const recentRecipes = [
-    {
-      id: 1,
-      title: "Sourdough Bread",
-      description: "Classic fermented sourdough loaf",
-      servings: 4,
-      lastUsed: "Today",
-    },
-    {
-      id: 2,
-      title: "Focaccia",
-      description: "Olive oil bread with herbs",
-      servings: 6,
-      lastUsed: "Yesterday",
-    },
-  ];
+    async function loadDashboardData() {
+      try {
+        setIsLoadingRecipes(true);
+        setRecipesError("");
 
-  const favoriteRecipes = [
-    {
-      id: 3,
-      title: "Cinnamon Rolls",
-      description: "Sweet bakery rolls",
-      servings: 8,
-      isFavorite: true,
-      lastUsed: "2 days ago",
-    },
-    {
-      id: 2,
-      title: "Focaccia",
-      description: "Olive oil bread with herbs",
-      servings: 6,
-      isFavorite: true,
-      lastUsed: "Yesterday",
-    },
-  ];
+        const data = await fetchRecipes();
 
-  const folders = [
-    { id: 1, name: "Breads" },
-    { id: 2, name: "Cookies" },
-    { id: 3, name: "Cakes" },
-    { id: 4, name: "Bakery Test" },
-    { id: 5, name: "Family Recipes" },
-  ];
+        if (isMounted) {
+          setRecipes(data);
+        }
+      } catch (err) {
+        console.error("Failed to load dashboard recipes:", err);
 
-  const reminders = [
-    {
-      id: 1,
-      title: "Check baking staples",
-      detail: "Flour, sugar, butter, and eggs",
-    },
-    {
-      id: 2,
-      title: "Submit bakery receipts",
-      detail: "Don’t forget this week’s business purchases",
-    },
-  ];
+        if (isMounted) {
+          setRecipesError(err.message || "Failed to load recipes");
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingRecipes(false);
+        }
+      }
+    }
+
+    loadDashboardData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const recentRecipes = useMemo(() => {
+    return [...recipes]
+      .sort(
+        (a, b) =>
+          new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt)
+      )
+      .slice(0, 3);
+  }, [recipes]);
+
+  const continueCookingRecipe = recentRecipes[0] || null;
 
   return (
-    <section className="space-y-8">
+    <section className="space-y-6">
       <DashboardWelcome />
-
       <DashboardQuickActions />
 
-      {showContinueCooking ? (
-        <DashboardContinueCooking
-          recipe={continueCooking}
-          onDismiss={() => setShowContinueCooking(false)}
-        />
-      ) : null}
+      <DashboardRecipePreview
+        recipes={recentRecipes}
+        isLoading={isLoadingRecipes}
+        error={recipesError}
+      />
 
-      <DashboardSection
-        title="Recent Recipes"
-        actionText="View all"
-        actionTo="/recipes"
-      >
-        <DashboardRecipePreview recipes={recentRecipes} />
-      </DashboardSection>
+      <DashboardContinueCooking
+        recipe={continueCookingRecipe}
+        isLoading={isLoadingRecipes}
+      />
 
-      <DashboardSection
-        title="Favorites"
-        actionText="View all"
-        actionTo="/favorites"
-      >
-        <DashboardRecipePreview recipes={favoriteRecipes} />
-      </DashboardSection>
-
-      <DashboardSection
-  title="Folders"
-  actionText="Manage"
-  actionTo="/folders"
->
-  <DashboardFolders folders={folders} />
-</DashboardSection>
-
-      <DashboardReminders reminders={reminders} />
+      <DashboardFolders />
+      <DashboardReminders />
     </section>
   );
 }
