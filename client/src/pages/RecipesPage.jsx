@@ -1,29 +1,28 @@
 import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
 import PageHeader from "../components/common/PageHeader";
 import Button from "../components/common/Button";
 import RecipeGrid from "../components/recipes/RecipeGrid";
+import { fetchRecipes } from "../api/recipes";
 
 export default function RecipesPage() {
-  const recipes = [
-    {
-      id: 1,
-      title: "Sourdough Bread",
-      description: "Classic fermented sourdough loaf",
-      servings: 4,
-    },
-    {
-      id: 2,
-      title: "Focaccia",
-      description: "Olive oil bread with herbs",
-      servings: 6,
-    },
-    {
-      id: 3,
-      title: "Cinnamon Rolls",
-      description: "Sweet bakery rolls",
-      servings: 8,
-    },
-  ];
+  const [recipes, setRecipes] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadRecipes() {
+      try {
+        const data = await fetchRecipes();
+        setRecipes(data);
+      } catch (err) {
+        console.error("Failed to fetch recipes:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadRecipes();
+  }, []);
 
   return (
     <section className="space-y-6">
@@ -39,7 +38,13 @@ export default function RecipesPage() {
         }
       />
 
-      <RecipeGrid recipes={recipes} />
+      {loading ? (
+        <p className="text-sm text-stone-500">Loading recipes...</p>
+      ) : recipes.length === 0 ? (
+        <p className="text-sm text-stone-500">No recipes yet.</p>
+      ) : (
+        <RecipeGrid recipes={recipes} />
+      )}
     </section>
   );
 }
