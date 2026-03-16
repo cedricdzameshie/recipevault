@@ -76,17 +76,16 @@ export default function DashboardFolders() {
               const recipeCount = folder.recipes?.length || 0;
 
               return (
-                <div
-                  key={folder.id}
-                  className="rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3"
-                >
-                  <p className="text-sm font-semibold text-stone-900">
-                    {folder.name}
-                  </p>
-                  <p className="mt-1 text-xs text-stone-600">
-                    {recipeCount} recipe{recipeCount === 1 ? "" : "s"}
-                  </p>
-                </div>
+                <Link key={folder.id} to={`/folders/${folder.id}`} className="block">
+                  <div className="rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 transition hover:border-stone-300 hover:bg-stone-100">
+                    <p className="text-sm font-semibold text-stone-900">
+                      {folder.name}
+                    </p>
+                    <p className="mt-1 text-xs text-stone-600">
+                      {recipeCount} recipe{recipeCount === 1 ? "" : "s"}
+                    </p>
+                  </div>
+                </Link>
               );
             })}
           </div>

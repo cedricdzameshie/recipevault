@@ -186,9 +186,11 @@ export default function FoldersPage() {
                     />
                   ) : (
                     <div className="space-y-2">
-                      <h2 className="text-lg font-semibold text-stone-900">
-                        {folder.name}
-                      </h2>
+                      <Link to={`/folders/${folder.id}`} className="block">
+                        <h2 className="text-lg font-semibold text-stone-900 underline-offset-2 hover:underline">
+                          {folder.name}
+                        </h2>
+                      </Link>
 
                       <p className="text-sm text-stone-600">
                         {recipeCount} recipe{recipeCount === 1 ? "" : "s"}

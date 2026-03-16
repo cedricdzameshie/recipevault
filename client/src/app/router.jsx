@@ -11,7 +11,7 @@ import FavoritesPage from "../pages/FavoritesPage";
 import FoldersPage from "../pages/FoldersPage";
 import NotFoundPage from "../pages/NotFoundPage";
 import RemindersPage from "../pages/RemindersPage";
-
+import FolderDetailPage from "../pages/FolderDetailPage";
 export const router = createBrowserRouter([
   { path: "/login", element: <LoginPage /> },
   {
@@ -28,6 +28,7 @@ export const router = createBrowserRouter([
       { path: "favorites", element: <FavoritesPage /> },
       { path: "folders", element: <FoldersPage /> },
       { path: "reminders", element: <RemindersPage /> },
+      { path: "folders/:id", element: <FolderDetailPage /> },
     ],
   },
   { path: "*", element: <NotFoundPage /> },
