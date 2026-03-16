@@ -3,6 +3,7 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import PageHeader from "../components/common/PageHeader";
 import RecipeForm from "../components/recipe-form/RecipeForm";
 import { fetchRecipeById, updateRecipe } from "../api/recipes";
+import { fetchFolders } from "../api/folders";
 
 function toNullableNumber(value) {
   if (value === "" || value === null || value === undefined) {
@@ -21,6 +22,7 @@ function buildRecipePayload(formValues) {
     prepTime: toNullableNumber(formValues.prepTime),
     cookTime: toNullableNumber(formValues.cookTime),
     notes: formValues.notes?.trim() || "",
+    folderId: formValues.folderId || null,
     ingredients: (formValues.ingredients || [])
       .filter(
         (ingredient) =>
@@ -48,6 +50,7 @@ export default function EditRecipePage() {
   const navigate = useNavigate();
 
   const [recipe, setRecipe] = useState(null);
+  const [folders, setFolders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
@@ -61,22 +64,27 @@ export default function EditRecipePage() {
       : `/recipes/${id}`;
 
   useEffect(() => {
-    async function loadRecipe() {
+    async function loadPageData() {
       try {
         setLoading(true);
         setError("");
 
-        const data = await fetchRecipeById(id);
-        setRecipe(data);
+        const [recipeData, foldersData] = await Promise.all([
+          fetchRecipeById(id),
+          fetchFolders(),
+        ]);
+
+        setRecipe(recipeData);
+        setFolders(foldersData);
       } catch (err) {
-        console.error("Failed to load recipe:", err);
+        console.error("Failed to load edit page data:", err);
         setError(err.message || "Failed to load recipe");
       } finally {
         setLoading(false);
       }
     }
 
-    loadRecipe();
+    loadPageData();
   }, [id]);
 
   async function handleSubmitRecipe(payload) {
@@ -144,6 +152,7 @@ export default function EditRecipePage() {
         submitLabel={isSaving ? "Saving Changes..." : "Save Changes"}
         cancelTo={cancelTo}
         onSubmitRecipe={handleSubmitRecipe}
+        folders={folders}
       />
     </section>
   );

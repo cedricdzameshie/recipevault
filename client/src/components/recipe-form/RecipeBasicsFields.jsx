@@ -2,7 +2,11 @@ import Input from "../common/Input";
 import Textarea from "../common/Textarea";
 import Card from "../common/Card";
 
-export default function RecipeBasicsFields({ formData, onChange }) {
+export default function RecipeBasicsFields({
+  formData,
+  onChange,
+  folders = [],
+}) {
   return (
     <Card>
       <div className="space-y-4">
@@ -52,6 +56,31 @@ export default function RecipeBasicsFields({ formData, onChange }) {
             onChange={onChange}
             placeholder="45"
           />
+        </div>
+
+        <div className="space-y-2">
+          <label
+            htmlFor="folderId"
+            className="text-sm font-medium text-stone-700"
+          >
+            Folder
+          </label>
+
+          <select
+            id="folderId"
+            name="folderId"
+            value={formData.folderId}
+            onChange={onChange}
+            className="w-full rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-900 outline-none transition focus:border-stone-400"
+          >
+            <option value="">No Folder</option>
+
+            {folders.map((folder) => (
+              <option key={folder.id} value={folder.id}>
+                {folder.name}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
     </Card>

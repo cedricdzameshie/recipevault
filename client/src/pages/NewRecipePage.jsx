@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PageHeader from "../components/common/PageHeader";
 import RecipeForm from "../components/recipe-form/RecipeForm";
 import { createRecipe } from "../api/recipes";
+import { fetchFolders } from "../api/folders";
 
 function toNullableNumber(value) {
   if (value === "" || value === null || value === undefined) {
@@ -21,6 +22,7 @@ function buildRecipePayload(formValues) {
     prepTime: toNullableNumber(formValues.prepTime),
     cookTime: toNullableNumber(formValues.cookTime),
     notes: formValues.notes?.trim() || "",
+    folderId: formValues.folderId || null,
     ingredients: (formValues.ingredients || [])
       .filter(
         (ingredient) =>
@@ -44,8 +46,31 @@ function buildRecipePayload(formValues) {
 
 export default function NewRecipePage() {
   const navigate = useNavigate();
+  const [folders, setFolders] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadFolders() {
+      try {
+        const data = await fetchFolders();
+
+        if (isMounted) {
+          setFolders(data);
+        }
+      } catch (err) {
+        console.error("Failed to load folders:", err);
+      }
+    }
+
+    loadFolders();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   async function handleSubmitRecipe(formValues) {
     try {
@@ -82,6 +107,7 @@ export default function NewRecipePage() {
       <RecipeForm
         submitLabel={isSaving ? "Saving..." : "Save Recipe"}
         onSubmitRecipe={handleSubmitRecipe}
+        folders={folders}
       />
     </section>
   );

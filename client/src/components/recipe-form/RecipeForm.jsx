@@ -48,6 +48,7 @@ function normalizeInitialData(initialData) {
         prepTime: "",
         cookTime: "",
         notes: "",
+        folderId: "",
       },
       ingredients: [createEmptyIngredient()],
       steps: [createEmptyStep()],
@@ -62,7 +63,8 @@ function normalizeInitialData(initialData) {
       prepTime: initialData.prepTime || "",
       cookTime: initialData.cookTime || "",
       notes: initialData.notes || "",
-    },
+      folderId: initialData.folderId || "",
+},
     ingredients:
       initialData.ingredients?.length > 0
         ? initialData.ingredients.map((ingredient) => ({
@@ -98,6 +100,7 @@ export default function RecipeForm({
   submitLabel = "Save Recipe",
   cancelTo = "/recipes",
   onSubmitRecipe,
+  folders = [],
 }) {
   const normalized = normalizeInitialData(initialData);
 
@@ -217,6 +220,7 @@ export default function RecipeForm({
       <RecipeBasicsFields
         formData={formData}
         onChange={handleBasicsChange}
+        folders={folders}
       />
 
       <IngredientsEditor

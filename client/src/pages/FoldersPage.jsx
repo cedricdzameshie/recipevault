@@ -1,69 +1,78 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import PageHeader from "../components/common/PageHeader";
 import Button from "../components/common/Button";
 import Card from "../components/common/Card";
 import Input from "../components/common/Input";
-
-function createId() {
-  return crypto.randomUUID();
-}
+import { fetchFolders, createFolder } from "../api/folders";
 
 export default function FoldersPage() {
-  const [folders, setFolders] = useState([
-    { id: createId(), name: "Breads" },
-    { id: createId(), name: "Cookies" },
-    { id: createId(), name: "Cakes" },
-    { id: createId(), name: "Bakery Test" },
-    { id: createId(), name: "Family Recipes" },
-  ]);
-
+  const [folders, setFolders] = useState([]);
   const [newFolderName, setNewFolderName] = useState("");
-  const [editingFolderId, setEditingFolderId] = useState(null);
-  const [editingName, setEditingName] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [isCreating, setIsCreating] = useState(false);
+  const [error, setError] = useState("");
 
-  function handleAddFolder(e) {
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadFolders() {
+      try {
+        setIsLoading(true);
+        setError("");
+
+        const data = await fetchFolders();
+
+        if (isMounted) {
+          setFolders(data);
+        }
+      } catch (err) {
+        console.error("Failed to load folders:", err);
+
+        if (isMounted) {
+          setError(err.message || "Failed to load folders");
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadFolders();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  async function handleAddFolder(e) {
     e.preventDefault();
 
     const trimmed = newFolderName.trim();
     if (!trimmed) return;
 
-    setFolders((prev) => [...prev, { id: createId(), name: trimmed }]);
-    setNewFolderName("");
-  }
+    try {
+      setIsCreating(true);
+      setError("");
 
-  function handleStartEdit(folder) {
-    setEditingFolderId(folder.id);
-    setEditingName(folder.name);
-  }
+      const createdFolder = await createFolder({ name: trimmed });
 
-  function handleSaveEdit(folderId) {
-    const trimmed = editingName.trim();
-    if (!trimmed) return;
-
-    setFolders((prev) =>
-      prev.map((folder) =>
-        folder.id === folderId ? { ...folder, name: trimmed } : folder
-      )
-    );
-
-    setEditingFolderId(null);
-    setEditingName("");
-  }
-
-  function handleCancelEdit() {
-    setEditingFolderId(null);
-    setEditingName("");
-  }
-
-  function handleDeleteFolder(folderId) {
-    setFolders((prev) => prev.filter((folder) => folder.id !== folderId));
+      setFolders((prev) => [createdFolder, ...prev]);
+      setNewFolderName("");
+    } catch (err) {
+      console.error("Failed to create folder:", err);
+      setError(err.message || "Failed to create folder");
+    } finally {
+      setIsCreating(false);
+    }
   }
 
   return (
     <section className="space-y-6">
       <PageHeader
         title="Folders"
-        description="Create, rename, and organize recipe folders."
+        description="Create and organize recipe folders."
         backTo="/dashboard"
         backLabel="Back to Dashboard"
       />
@@ -79,66 +88,82 @@ export default function FoldersPage() {
           />
 
           <div className="flex justify-end">
-            <Button type="submit">Add Folder</Button>
+            <Button type="submit" disabled={isCreating}>
+              {isCreating ? "Adding..." : "Add Folder"}
+            </Button>
           </div>
         </form>
       </Card>
 
-      <div className="space-y-4">
-        {folders.map((folder) => {
-          const isEditing = editingFolderId === folder.id;
+      {error ? (
+        <Card>
+          <p className="text-sm text-red-600">{error}</p>
+        </Card>
+      ) : null}
 
-          return (
-            <Card key={folder.id}>
-              <div className="space-y-4">
-                {isEditing ? (
-                  <Input
-                    label="Edit Folder Name"
-                    name="editFolderName"
-                    value={editingName}
-                    onChange={(e) => setEditingName(e.target.value)}
-                    placeholder="Folder name"
-                  />
-                ) : (
+      {isLoading ? (
+        <Card>
+          <p className="text-sm text-stone-600">Loading folders...</p>
+        </Card>
+      ) : folders.length === 0 ? (
+        <Card>
+          <p className="text-sm text-stone-600">
+            No folders yet. Create one to start organizing recipes.
+          </p>
+        </Card>
+      ) : (
+        <div className="space-y-4">
+          {folders.map((folder) => {
+            const recipeCount = folder.recipes?.length || 0;
+
+            return (
+              <Card key={folder.id}>
+                <div className="space-y-4">
                   <div>
                     <h2 className="text-lg font-semibold text-stone-900">
                       {folder.name}
                     </h2>
+                    <p className="text-sm text-stone-600">
+                      {recipeCount} recipe{recipeCount === 1 ? "" : "s"}
+                    </p>
                   </div>
-                )}
 
-                <div className="flex flex-wrap gap-3">
-                  {isEditing ? (
-                    <>
-                      <Button onClick={() => handleSaveEdit(folder.id)}>
-                        Save
-                      </Button>
-                      <Button variant="secondary" onClick={handleCancelEdit}>
-                        Cancel
-                      </Button>
-                    </>
+                  {recipeCount > 0 ? (
+                    <div className="space-y-2">
+                      <p className="text-xs font-medium uppercase tracking-wide text-stone-500">
+                        Recipes in this folder
+                      </p>
+
+                      <ul className="space-y-2">
+                        {folder.recipes.slice(0, 4).map((recipe) => (
+                          <li key={recipe.id}>
+                            <Link
+                              to={`/recipes/${recipe.id}`}
+                              className="text-sm text-stone-700 underline-offset-2 hover:text-stone-900 hover:underline"
+                            >
+                              {recipe.title}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+
+                      {recipeCount > 4 ? (
+                        <p className="text-xs text-stone-500">
+                          + {recipeCount - 4} more
+                        </p>
+                      ) : null}
+                    </div>
                   ) : (
-                    <Button
-                      variant="secondary"
-                      onClick={() => handleStartEdit(folder)}
-                    >
-                      Rename
-                    </Button>
+                    <p className="text-sm text-stone-500">
+                      No recipes in this folder yet.
+                    </p>
                   )}
-
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteFolder(folder.id)}
-                    className="inline-flex items-center justify-center rounded-xl border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-700 transition hover:bg-red-50"
-                  >
-                    Delete
-                  </button>
                 </div>
-              </div>
-            </Card>
-          );
-        })}
-      </div>
+              </Card>
+            );
+          })}
+        </div>
+      )}
     </section>
   );
 }
