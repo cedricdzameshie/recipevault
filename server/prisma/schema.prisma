@@ -24,6 +24,7 @@ model Recipe {
   notes       String?
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
+  isFavorite  Boolean      @default(false)
 
   folderId    String?
   folder      Folder?      @relation(fields: [folderId], references: [id], onDelete: SetNull)

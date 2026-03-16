@@ -74,3 +74,17 @@ export async function deleteRecipeById(id) {
 
   return data;
 }
+
+export async function toggleFavoriteById(id) {
+  const response = await fetch(`${API_BASE_URL}/recipes/${id}/favorite`, {
+    method: "PATCH",
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.error || "Failed to toggle favorite");
+  }
+
+  return data;
+}

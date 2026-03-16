@@ -3,7 +3,11 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import Button from "../components/common/Button";
 import Card from "../components/common/Card";
 import PageHeader from "../components/common/PageHeader";
-import { fetchRecipeById, deleteRecipeById } from "../api/recipes";
+import {
+  fetchRecipeById,
+  deleteRecipeById,
+  toggleFavoriteById,
+} from "../api/recipes";
 
 export default function RecipeDetailPage() {
   const { id } = useParams();
@@ -12,6 +16,7 @@ export default function RecipeDetailPage() {
   const [recipe, setRecipe] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -67,6 +72,19 @@ export default function RecipeDetailPage() {
     }
   }
 
+  async function handleToggleFavorite() {
+    try {
+      setIsTogglingFavorite(true);
+      const updatedRecipe = await toggleFavoriteById(recipe.id);
+      setRecipe(updatedRecipe);
+    } catch (err) {
+      console.error("Failed to toggle favorite:", err);
+      alert(err.message || "Failed to update favorite");
+    } finally {
+      setIsTogglingFavorite(false);
+    }
+  }
+
   if (isLoading) {
     return (
       <section>
@@ -108,6 +126,19 @@ export default function RecipeDetailPage() {
             <Link to={`/recipes/${recipe.id}/edit`}>
               <Button variant="secondary">Edit</Button>
             </Link>
+
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={handleToggleFavorite}
+              disabled={isTogglingFavorite}
+            >
+              {isTogglingFavorite
+                ? "Saving..."
+                : recipe.isFavorite
+                ? "Unfavorite"
+                : "Favorite"}
+            </Button>
 
             <Button
               type="button"

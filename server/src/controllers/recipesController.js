@@ -201,3 +201,30 @@ export async function deleteRecipe(req, res) {
     res.status(500).json({ error: "Failed to delete recipe" });
   }
 }
+
+export async function toggleFavorite(req, res) {
+  try {
+    const { id } = req.params;
+
+    const existingRecipe = await prisma.recipe.findUnique({
+      where: { id },
+    });
+
+    if (!existingRecipe) {
+      return res.status(404).json({ error: "Recipe not found" });
+    }
+
+    const updatedRecipe = await prisma.recipe.update({
+      where: { id },
+      data: {
+        isFavorite: !existingRecipe.isFavorite,
+      },
+      include: recipeInclude,
+    });
+
+    res.json(updatedRecipe);
+  } catch (error) {
+    console.error("Error toggling favorite:", error);
+    res.status(500).json({ error: "Failed to toggle favorite" });
+  }
+}
