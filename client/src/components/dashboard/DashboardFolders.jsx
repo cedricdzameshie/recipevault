@@ -43,45 +43,49 @@ export default function DashboardFolders() {
   }, []);
 
   return (
-    <Card>
-      <div className="space-y-4">
+    <Card className="border-stone-300/70 bg-white/95">
+      <div className="space-y-5">
         <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-sm font-medium uppercase tracking-wide text-green-700">
+          <div className="space-y-1">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-rv-plum/65">
               Folders
             </p>
-            <h2 className="mt-1 text-xl font-semibold text-stone-900">
+            <h2 className="text-2xl font-semibold tracking-tight text-rv-plum">
               Keep recipes organized
             </h2>
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            <Link to="/folders">
-              <Button variant="secondary">Manage</Button>
-            </Link>
-          </div>
+          <Link to="/folders">
+            <Button variant="secondary">Manage</Button>
+          </Link>
         </div>
 
         {isLoading ? (
           <p className="text-sm text-stone-600">Loading folders...</p>
         ) : error ? (
-          <p className="text-sm text-red-600">{error}</p>
+          <p className="text-sm text-rv-coral">{error}</p>
         ) : folders.length === 0 ? (
-          <p className="text-sm text-stone-600">
-            No folders yet. Create one to start organizing recipes.
-          </p>
+          <div className="rounded-2xl border border-dashed border-stone-300 bg-rv-cream/50 px-4 py-4">
+            <p className="text-sm text-stone-600">
+              No folders yet. Create one to start organizing recipes.
+            </p>
+          </div>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {folders.map((folder) => {
               const recipeCount = folder.recipes?.length || 0;
 
               return (
-                <Link key={folder.id} to={`/folders/${folder.id}`} className="block">
-                  <div className="rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 transition hover:border-stone-300 hover:bg-stone-100">
-                    <p className="text-sm font-semibold text-stone-900">
+                <Link
+                  key={folder.id}
+                  to={`/folders/${folder.id}`}
+                  className="block"
+                >
+                  <div className="rounded-2xl border border-stone-200 bg-rv-cream/55 px-4 py-4 transition hover:-translate-y-0.5 hover:border-rv-teal/50 hover:bg-rv-teal/10">
+                    <p className="text-base font-semibold text-rv-plum">
                       {folder.name}
                     </p>
-                    <p className="mt-1 text-xs text-stone-600">
+                    <p className="mt-2 text-sm text-stone-600">
                       {recipeCount} recipe{recipeCount === 1 ? "" : "s"}
                     </p>
                   </div>
