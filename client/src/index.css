@@ -1,8 +1,15 @@
 @import "tailwindcss";
 
+@theme {
+  --color-rv-cream: #f7f6e5;
+  --color-rv-teal: #76d2db;
+  --color-rv-coral: #da4848;
+  --color-rv-plum: #36064d;
+}
+
 :root {
   color: #1c1917;
-  background-color: #f8fafc;
+  background-color: var(--color-rv-cream);
   font-family:
     Inter,
     system-ui,
@@ -20,4 +27,5 @@ body,
 
 body {
   margin: 0;
+  background-color: var(--color-rv-cream);
 }

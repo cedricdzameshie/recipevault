@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Button from "../common/Button";
+import Card from "../common/Card";
 
 const quotes = [
   "Small steps make great bakes.",
@@ -21,20 +22,20 @@ export default function DashboardWelcome() {
   }, []);
 
   return (
-    <section className="rounded-3xl bg-white p-6 shadow-sm">
+    <Card className="border-stone-300/70 bg-white/95 p-8 md:p-10">
       <div className="space-y-6">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-col gap-6 xl:flex-row xl:items-center xl:justify-between">
           <div className="space-y-3">
-            <p className="text-sm font-medium uppercase tracking-wide text-green-700">
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-rv-plum/80">
               RecipeVault
             </p>
 
-            <div>
-              <h1 className="text-4xl font-bold tracking-tight text-stone-900">
+            <div className="space-y-2">
+              <h1 className="text-4xl font-bold tracking-tight text-rv-plum md:text-5xl">
                 Welcome back, Chakas
               </h1>
 
-              <p className="mt-2 text-base text-stone-600">
+              <p className="max-w-2xl text-base text-stone-600 md:text-lg">
                 Ready to bake something good today?
               </p>
             </div>
@@ -49,16 +50,16 @@ export default function DashboardWelcome() {
               <Button variant="secondary">Browse Recipes</Button>
             </Link>
 
-            <Button variant="secondary">Import Recipe</Button>
+            <Button variant="accent">Import Recipe</Button>
           </div>
         </div>
 
-        <div className="rounded-2xl bg-green-50 px-4 py-4">
-          <p className="text-sm font-medium text-green-900">
+        <div className="rounded-2xl border border-rv-teal/30 bg-rv-teal/18 px-5 py-4">
+          <p className="text-base font-medium text-rv-plum">
             {quotes[quoteIndex]}
           </p>
         </div>
       </div>
-    </section>
+    </Card>
   );
 }
