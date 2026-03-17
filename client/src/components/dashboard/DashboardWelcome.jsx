@@ -15,7 +15,7 @@ export default function DashboardWelcome() {
   useEffect(() => {
     const interval = setInterval(() => {
       setQuoteIndex((prev) => (prev + 1) % quotes.length);
-    }, 5000);
+    }, 60000);
 
     return () => clearInterval(interval);
   }, []);
