@@ -15,6 +15,21 @@ export default function DashboardPage() {
   const [isLoadingReminders, setIsLoadingReminders] = useState(true);
   const [recipesError, setRecipesError] = useState("");
   const [remindersError, setRemindersError] = useState("");
+  const [continueCookingSession, setContinueCookingSession] = useState(null);
+
+  useEffect(() => {
+    const storedSession = localStorage.getItem("continueCooking");
+
+    if (storedSession) {
+      try {
+        const parsed = JSON.parse(storedSession);
+        setContinueCookingSession(parsed);
+      } catch (error) {
+        console.error("Failed to parse continue cooking session:", error);
+        localStorage.removeItem("continueCooking");
+      }
+    }
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -83,8 +98,19 @@ export default function DashboardPage() {
       .slice(0, 3);
   }, [recipes]);
 
-  const continueCookingRecipe = recentRecipes[0] || null;
+  const continueCookingRecipe =
+    continueCookingSession && recipes.length > 0
+      ? recipes.find(
+          (recipe) => recipe.id === continueCookingSession.recipeId
+        ) || null
+      : null;
+
   const activeReminders = reminders.filter((reminder) => !reminder.complete);
+
+  function handleDismissContinueCooking() {
+    localStorage.removeItem("continueCooking");
+    setContinueCookingSession(null);
+  }
 
   return (
     <section className="space-y-6">
@@ -99,7 +125,9 @@ export default function DashboardPage() {
 
       <DashboardContinueCooking
         recipe={continueCookingRecipe}
+        currentStep={continueCookingSession?.step || 1}
         isLoading={isLoadingRecipes}
+        onDismiss={handleDismissContinueCooking}
       />
 
       <DashboardFolders />

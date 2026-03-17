@@ -1,168 +1,143 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import CookingHeader from "../components/cooking/CookingHeader";
 import CookingStepCard from "../components/cooking/CookingStepCard";
 import CookingControls from "../components/cooking/CookingControls";
-
-const recipeData = {
-  1: {
-    id: 1,
-    title: "Sourdough Bread",
-    steps: [
-      {
-        id: "s1",
-        instruction: "Mix flour and water together until shaggy.",
-        prepNote: "Use a large mixing bowl.",
-        timerMinutes: "30",
-        ingredients: [
-          { id: "si1", quantity: "500", unit: "g", ingredient: "bread flour" },
-          { id: "si2", quantity: "350", unit: "ml", ingredient: "water" },
-        ],
-      },
-      {
-        id: "s2",
-        instruction: "Add starter and salt, then mix thoroughly.",
-        prepNote: "Make sure salt is evenly distributed.",
-        timerMinutes: "",
-        ingredients: [
-          { id: "si3", quantity: "10", unit: "g", ingredient: "salt" },
-        ],
-      },
-      {
-        id: "s3",
-        instruction: "Let dough rest and begin stretch-and-fold cycles.",
-        prepNote: "Keep dough covered between folds.",
-        timerMinutes: "30",
-        ingredients: [],
-      },
-      {
-        id: "s4",
-        instruction: "Shape dough, proof, and bake until deep golden brown.",
-        prepNote: "Preheat oven before loading dough.",
-        timerMinutes: "45",
-        ingredients: [],
-      },
-    ],
-  },
-  2: {
-    id: 2,
-    title: "Focaccia",
-    steps: [
-      {
-        id: "s5",
-        instruction: "Mix dough ingredients until fully combined.",
-        prepNote: "Dough will be sticky.",
-        timerMinutes: "10",
-        ingredients: [
-          { id: "si4", quantity: "4", unit: "cup", ingredient: "flour" },
-          { id: "si5", quantity: "2", unit: "tbsp", ingredient: "olive oil" },
-        ],
-      },
-      {
-        id: "s6",
-        instruction: "Let dough rise until puffy.",
-        prepNote: "Lightly oil the bowl first.",
-        timerMinutes: "60",
-        ingredients: [],
-      },
-      {
-        id: "s7",
-        instruction: "Spread in pan, dimple, top, and bake.",
-        prepNote: "Add olive oil before dimpling.",
-        timerMinutes: "25",
-        ingredients: [],
-      },
-    ],
-  },
-  3: {
-    id: 3,
-    title: "Cinnamon Rolls",
-    steps: [
-      {
-        id: "s8",
-        instruction: "Prepare dough and knead until smooth.",
-        prepNote: "Warm milk helps the dough come together.",
-        timerMinutes: "12",
-        ingredients: [
-          { id: "si6", quantity: "3", unit: "cup", ingredient: "flour" },
-          { id: "si7", quantity: "1", unit: "cup", ingredient: "milk" },
-        ],
-      },
-      {
-        id: "s9",
-        instruction: "Let dough rise until doubled.",
-        prepNote: "",
-        timerMinutes: "60",
-        ingredients: [],
-      },
-      {
-        id: "s10",
-        instruction: "Roll out dough, add filling, roll, and cut.",
-        prepNote: "Use softened butter for easy spreading.",
-        timerMinutes: "15",
-        ingredients: [],
-      },
-      {
-        id: "s11",
-        instruction: "Bake until lightly golden, then frost.",
-        prepNote: "Let cool slightly before icing.",
-        timerMinutes: "25",
-        ingredients: [],
-      },
-    ],
-  },
-};
+import { fetchRecipeById } from "../api/recipes";
 
 export default function CookingModePage() {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
-  const recipe = recipeData[id];
 
-  const totalSteps = recipe?.steps.length ?? 0;
+  const [recipe, setRecipe] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [hasStartedNavigating, setHasStartedNavigating] = useState(false);
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [isFinished, setIsFinished] = useState(false);
 
-const requestedStep = Number(searchParams.get("step") || "1");
-const safeInitialStepIndex =
-  totalSteps > 0
-    ? Math.min(Math.max(requestedStep - 1, 0), totalSteps - 1)
-    : 0;
+  useEffect(() => {
+    let isMounted = true;
 
-const [hasStartedNavigating, setHasStartedNavigating] = useState(false);
-const [currentStepIndex, setCurrentStepIndex] = useState(safeInitialStepIndex);
-const [isFinished, setIsFinished] = useState(false);
+    async function loadRecipe() {
+      try {
+        setIsLoading(true);
+        setError("");
 
-const activeStepIndex = hasStartedNavigating
-  ? currentStepIndex
-  : safeInitialStepIndex;
+        const data = await fetchRecipeById(id);
 
+        if (!isMounted) return;
 
+        setRecipe(data);
+
+        const totalSteps = data?.steps?.length ?? 0;
+        const requestedStep = Number(searchParams.get("step") || "1");
+
+        const safeInitialStepIndex =
+          totalSteps > 0
+            ? Math.min(Math.max(requestedStep - 1, 0), totalSteps - 1)
+            : 0;
+
+        setCurrentStepIndex(safeInitialStepIndex);
+      } catch (err) {
+        console.error("Failed to load cooking recipe:", err);
+
+        if (isMounted) {
+          setError(err.message || "Failed to load recipe");
+          setRecipe(null);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadRecipe();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [id, searchParams]);
+
+  const totalSteps = recipe?.steps?.length ?? 0;
+
+  const activeStepIndex = hasStartedNavigating
+    ? currentStepIndex
+    : currentStepIndex;
 
   const currentStep = useMemo(() => {
-  if (!recipe || !recipe.steps.length) return null;
-  return recipe.steps[activeStepIndex];
-}, [recipe, activeStepIndex]);
+    if (!recipe || !recipe.steps?.length) return null;
+    return recipe.steps[activeStepIndex];
+  }, [recipe, activeStepIndex]);
+
+  const currentStepNumber = activeStepIndex + 1;
+
+  useEffect(() => {
+    if (!recipe || !currentStep || isFinished) return;
+
+    localStorage.setItem(
+      "continueCooking",
+      JSON.stringify({
+        recipeId: recipe.id,
+        step: currentStepNumber,
+      })
+    );
+  }, [recipe, currentStep, currentStepNumber, isFinished]);
 
   function handlePrevious() {
-  setHasStartedNavigating(true);
-  setCurrentStepIndex((prev) => Math.max(prev - 1, 0));
-  setIsFinished(false);
-}
+    setHasStartedNavigating(true);
+    setCurrentStepIndex((prev) => Math.max(prev - 1, 0));
+    setIsFinished(false);
+  }
 
   function handleNext() {
-  if (!recipe) return;
+    if (!recipe) return;
 
-  setHasStartedNavigating(true);
+    setHasStartedNavigating(true);
 
-  if (activeStepIndex < recipe.steps.length - 1) {
-    setCurrentStepIndex((prev) => prev + 1);
-  } else {
-    setIsFinished(true);
+    if (activeStepIndex < recipe.steps.length - 1) {
+      setCurrentStepIndex((prev) => prev + 1);
+    } else {
+      setIsFinished(true);
+      localStorage.removeItem("continueCooking");
+    }
   }
-}
 
-  if (!recipe) {
+  function handleStartAgain() {
+    setHasStartedNavigating(true);
+    setCurrentStepIndex(0);
+    setIsFinished(false);
+
+    if (recipe) {
+      localStorage.setItem(
+        "continueCooking",
+        JSON.stringify({
+          recipeId: recipe.id,
+          step: 1,
+        })
+      );
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <section className="space-y-4">
+        <h1 className="text-3xl font-semibold">Loading Recipe...</h1>
+        <Link to="/recipes" className="text-sm text-stone-600 underline">
+          Back to Recipes
+        </Link>
+      </section>
+    );
+  }
+
+  if (error || !recipe) {
     return (
       <section className="space-y-4">
         <h1 className="text-3xl font-semibold">Recipe Not Found</h1>
+        <p className="text-sm text-stone-600">
+          {error || "We couldn't find that recipe."}
+        </p>
         <Link to="/recipes" className="text-sm text-stone-600 underline">
           Back to Recipes
         </Link>
@@ -222,10 +197,7 @@ const activeStepIndex = hasStartedNavigating
 
             <button
               type="button"
-              onClick={() => {
-                setCurrentStepIndex(0);
-                setIsFinished(false);
-              }}
+              onClick={handleStartAgain}
               className="inline-flex items-center justify-center rounded-xl bg-stone-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-stone-700"
             >
               Start Again
@@ -236,7 +208,6 @@ const activeStepIndex = hasStartedNavigating
     );
   }
 
-  const currentStepNumber = activeStepIndex + 1;
   const editUrl = `/recipes/${recipe.id}/edit?returnTo=cook&step=${currentStepNumber}`;
 
   return (
@@ -269,7 +240,7 @@ const activeStepIndex = hasStartedNavigating
         <div
           className="h-full rounded-full bg-stone-900 transition-all"
           style={{
-            width: `${((currentStepNumber) / totalSteps) * 100}%`,
+            width: `${(currentStepNumber / totalSteps) * 100}%`,
           }}
         />
       </div>
