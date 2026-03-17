@@ -228,3 +228,41 @@ export async function toggleFavorite(req, res) {
     res.status(500).json({ error: "Failed to toggle favorite" });
   }
 }
+
+export async function updateRecipeFolder(req, res) {
+  try {
+    const { id } = req.params;
+    const { folderId } = req.body;
+
+    const existingRecipe = await prisma.recipe.findUnique({
+      where: { id },
+    });
+
+    if (!existingRecipe) {
+      return res.status(404).json({ error: "Recipe not found" });
+    }
+
+    if (folderId) {
+      const folder = await prisma.folder.findUnique({
+        where: { id: folderId },
+      });
+
+      if (!folder) {
+        return res.status(404).json({ error: "Folder not found" });
+      }
+    }
+
+    const updatedRecipe = await prisma.recipe.update({
+      where: { id },
+      data: {
+        folderId: folderId || null,
+      },
+      include: recipeInclude,
+    });
+
+    res.json(updatedRecipe);
+  } catch (error) {
+    console.error("Error updating recipe folder:", error);
+    res.status(500).json({ error: "Failed to update recipe folder" });
+  }
+}

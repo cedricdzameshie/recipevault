@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import PageHeader from "../components/common/PageHeader";
 import RecipeForm from "../components/recipe-form/RecipeForm";
 import { createRecipe } from "../api/recipes";
 import { fetchFolders } from "../api/folders";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 function toNullableNumber(value) {
   if (value === "" || value === null || value === undefined) {
@@ -46,9 +46,11 @@ function buildRecipePayload(formValues) {
 
 export default function NewRecipePage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [folders, setFolders] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
+  const initialFolderId = searchParams.get("folderId") || "";
 
   useEffect(() => {
     let isMounted = true;
@@ -105,6 +107,7 @@ export default function NewRecipePage() {
       ) : null}
 
       <RecipeForm
+        initialData={{ folderId: initialFolderId }}
         submitLabel={isSaving ? "Saving..." : "Save Recipe"}
         onSubmitRecipe={handleSubmitRecipe}
         folders={folders}

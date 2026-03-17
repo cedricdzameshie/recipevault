@@ -82,7 +82,7 @@ export default function FolderDetailPage() {
         backTo="/folders"
         backLabel="Back to Folders"
         action={
-          <Link to="/recipes/new">
+          <Link to={`/recipes/new?folderId=${folder.id}`}>
             <Button>Add Recipe</Button>
           </Link>
         }

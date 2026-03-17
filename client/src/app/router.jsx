@@ -12,6 +12,7 @@ import FoldersPage from "../pages/FoldersPage";
 import NotFoundPage from "../pages/NotFoundPage";
 import RemindersPage from "../pages/RemindersPage";
 import FolderDetailPage from "../pages/FolderDetailPage";
+
 export const router = createBrowserRouter([
   { path: "/login", element: <LoginPage /> },
   {

@@ -88,3 +88,21 @@ export async function toggleFavoriteById(id) {
 
   return data;
 }
+
+export async function updateRecipeFolder(id, folderId) {
+  const response = await fetch(`${API_BASE_URL}/recipes/${id}/folder`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ folderId }),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.error || "Failed to update recipe folder");
+  }
+
+  return data;
+}

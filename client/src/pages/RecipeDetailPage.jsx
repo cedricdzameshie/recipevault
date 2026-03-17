@@ -7,30 +7,40 @@ import {
   fetchRecipeById,
   deleteRecipeById,
   toggleFavoriteById,
+  updateRecipeFolder,
 } from "../api/recipes";
+import { fetchFolders } from "../api/folders";
 
 export default function RecipeDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
 
   const [recipe, setRecipe] = useState(null);
+  const [folders, setFolders] = useState([]);
+  const [selectedFolderId, setSelectedFolderId] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
+  const [isUpdatingFolder, setIsUpdatingFolder] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
     let isMounted = true;
 
-    async function loadRecipe() {
+    async function loadRecipePage() {
       try {
         setIsLoading(true);
         setError("");
 
-        const data = await fetchRecipeById(id);
+        const [recipeData, foldersData] = await Promise.all([
+          fetchRecipeById(id),
+          fetchFolders(),
+        ]);
 
         if (isMounted) {
-          setRecipe(data);
+          setRecipe(recipeData);
+          setFolders(foldersData);
+          setSelectedFolderId(recipeData.folderId || "");
         }
       } catch (err) {
         console.error("Failed to load recipe:", err);
@@ -46,7 +56,7 @@ export default function RecipeDetailPage() {
       }
     }
 
-    loadRecipe();
+    loadRecipePage();
 
     return () => {
       isMounted = false;
@@ -82,6 +92,25 @@ export default function RecipeDetailPage() {
       alert(err.message || "Failed to update favorite");
     } finally {
       setIsTogglingFavorite(false);
+    }
+  }
+
+  async function handleUpdateFolder() {
+    try {
+      setIsUpdatingFolder(true);
+
+      const updatedRecipe = await updateRecipeFolder(
+        recipe.id,
+        selectedFolderId || null
+      );
+
+      setRecipe(updatedRecipe);
+      setSelectedFolderId(updatedRecipe.folderId || "");
+    } catch (err) {
+      console.error("Failed to update folder:", err);
+      alert(err.message || "Failed to update folder");
+    } finally {
+      setIsUpdatingFolder(false);
     }
   }
 
@@ -151,6 +180,63 @@ export default function RecipeDetailPage() {
           </div>
         }
       />
+
+      <Card>
+        <div className="grid gap-4 lg:grid-cols-2">
+          <div className="space-y-2">
+            <p className="text-xs font-medium uppercase tracking-wide text-stone-500">
+              Current Folder
+            </p>
+            <p className="text-lg font-semibold text-stone-900">
+              {recipe.folder?.name || "No Folder"}
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <p className="text-xs font-medium uppercase tracking-wide text-stone-500">
+              Favorite Status
+            </p>
+            <p className="text-lg font-semibold text-stone-900">
+              {recipe.isFavorite ? "Favorited" : "Not Favorited"}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-end">
+          <div className="flex-1 space-y-2">
+            <label
+              htmlFor="folderId"
+              className="text-sm font-medium text-stone-700"
+            >
+              Add to Folder
+            </label>
+
+            <select
+              id="folderId"
+              value={selectedFolderId}
+              onChange={(e) => setSelectedFolderId(e.target.value)}
+              className="w-full rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-900 outline-none transition focus:border-stone-400"
+            >
+              <option value="">No Folder</option>
+
+              {folders.map((folder) => (
+                <option key={folder.id} value={folder.id}>
+                  {folder.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={handleUpdateFolder}
+            disabled={isUpdatingFolder}
+          >
+            {isUpdatingFolder ? "Saving..." : "Save Folder"}
+          </Button>
+        </div>
+      </Card>
 
       <Card>
         <div className="grid gap-4 sm:grid-cols-3">
