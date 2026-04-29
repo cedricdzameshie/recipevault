@@ -143,7 +143,7 @@ export default function RecipeDetailPage() {
     <section className="space-y-6">
       <PageHeader
         title={recipe.title}
-        description={recipe.description}
+        description={recipe.description || "A saved recipe from your RecipeVault."}
         backTo="/recipes"
         backLabel="Back to Recipes"
         action={
@@ -158,7 +158,7 @@ export default function RecipeDetailPage() {
 
             <Button
               type="button"
-              variant="secondary"
+              variant={recipe.isFavorite ? "accent" : "secondary"}
               onClick={handleToggleFavorite}
               disabled={isTogglingFavorite}
             >
@@ -171,7 +171,7 @@ export default function RecipeDetailPage() {
 
             <Button
               type="button"
-              variant="secondary"
+              variant="danger"
               onClick={handleDeleteRecipe}
               disabled={isDeleting}
             >
@@ -181,102 +181,109 @@ export default function RecipeDetailPage() {
         }
       />
 
-      <Card>
-        <div className="grid gap-4 lg:grid-cols-2">
-          <div className="space-y-2">
-            <p className="text-xs font-medium uppercase tracking-wide text-stone-500">
-              Current Folder
-            </p>
-            <p className="text-lg font-semibold text-stone-900">
-              {recipe.folder?.name || "No Folder"}
-            </p>
+      <Card className="border-stone-300/70 bg-white/95">
+        <div className="space-y-6">
+          <div className="grid gap-4 lg:grid-cols-2">
+            <div className="rounded-2xl border border-rv-teal/25 bg-rv-teal/12 px-5 py-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-rv-plum/65">
+                Current Folder
+              </p>
+              <p className="mt-2 text-lg font-semibold text-rv-plum">
+                {recipe.folder?.name || "No Folder"}
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-rv-teal/25 bg-rv-teal/12 px-5 py-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-rv-plum/65">
+                Favorite Status
+              </p>
+              <p className="mt-2 text-lg font-semibold text-rv-plum">
+                {recipe.isFavorite ? "Favorite" : "Not Favorite"}
+              </p>
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <p className="text-xs font-medium uppercase tracking-wide text-stone-500">
-              Favorite Status
-            </p>
-            <p className="text-lg font-semibold text-stone-900">
-              {recipe.isFavorite ? "Favorited" : "Not Favorited"}
-            </p>
-          </div>
-        </div>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+            <div className="flex-1 space-y-2">
+              <label
+                htmlFor="folderId"
+                className="text-sm font-medium text-stone-700"
+              >
+                Add to Folder
+              </label>
 
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-end">
-          <div className="flex-1 space-y-2">
-            <label
-              htmlFor="folderId"
-              className="text-sm font-medium text-stone-700"
+              <select
+                id="folderId"
+                value={selectedFolderId}
+                onChange={(e) => setSelectedFolderId(e.target.value)}
+                className="w-full rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm text-rv-plum outline-none transition focus:border-rv-teal/60"
+              >
+                <option value="">No Folder</option>
+
+                {folders.map((folder) => (
+                  <option key={folder.id} value={folder.id}>
+                    {folder.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={handleUpdateFolder}
+              disabled={isUpdatingFolder}
             >
-              Add to Folder
-            </label>
-
-            <select
-              id="folderId"
-              value={selectedFolderId}
-              onChange={(e) => setSelectedFolderId(e.target.value)}
-              className="w-full rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-900 outline-none transition focus:border-stone-400"
-            >
-              <option value="">No Folder</option>
-
-              {folders.map((folder) => (
-                <option key={folder.id} value={folder.id}>
-                  {folder.name}
-                </option>
-              ))}
-            </select>
+              {isUpdatingFolder ? "Saving..." : "Save Folder"}
+            </Button>
           </div>
-
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={handleUpdateFolder}
-            disabled={isUpdatingFolder}
-          >
-            {isUpdatingFolder ? "Saving..." : "Save Folder"}
-          </Button>
         </div>
       </Card>
 
-      <Card>
+      <Card className="border-stone-300/70 bg-white/95">
         <div className="grid gap-4 sm:grid-cols-3">
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-stone-500">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-rv-plum/60">
               Servings
             </p>
-            <p className="mt-1 text-lg font-semibold">
+            <p className="mt-2 text-2xl font-semibold text-rv-plum">
               {recipe.servings ?? "—"}
             </p>
           </div>
 
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-stone-500">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-rv-plum/60">
               Prep Time
             </p>
-            <p className="mt-1 text-lg font-semibold">
+            <p className="mt-2 text-2xl font-semibold text-rv-plum">
               {recipe.prepTime ? `${recipe.prepTime} min` : "—"}
             </p>
           </div>
 
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-stone-500">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-rv-plum/60">
               Cook Time
             </p>
-            <p className="mt-1 text-lg font-semibold">
+            <p className="mt-2 text-2xl font-semibold text-rv-plum">
               {recipe.cookTime ? `${recipe.cookTime} min` : "—"}
             </p>
           </div>
         </div>
       </Card>
 
-      <Card>
-        <h2 className="text-xl font-semibold">Recipe Ingredients</h2>
+      <Card className="border-stone-300/70 bg-white/95">
+        <h2 className="text-2xl font-semibold tracking-tight text-rv-plum">
+          Recipe Ingredients
+        </h2>
 
         {recipe.ingredients?.length > 0 ? (
-          <ul className="mt-4 space-y-3">
+          <ul className="mt-5 space-y-3">
             {recipe.ingredients.map((item) => (
-              <li key={item.id} className="text-sm text-stone-700">
-                <span className="font-medium">
+              <li
+                key={item.id}
+                className="rounded-2xl border border-stone-200 bg-rv-cream/45 px-4 py-3 text-sm text-stone-700"
+              >
+                <span className="font-semibold text-rv-plum">
                   {[item.quantity, item.unit].filter(Boolean).join(" ")}
                 </span>
                 {item.quantity || item.unit ? " " : ""}
@@ -285,38 +292,42 @@ export default function RecipeDetailPage() {
             ))}
           </ul>
         ) : (
-          <p className="mt-4 text-sm text-stone-700">No ingredients yet.</p>
+          <p className="mt-4 text-sm text-stone-600">No ingredients yet.</p>
         )}
       </Card>
 
-      <Card>
-        <h2 className="text-xl font-semibold">Steps</h2>
+      <Card className="border-stone-300/70 bg-white/95">
+        <h2 className="text-2xl font-semibold tracking-tight text-rv-plum">
+          Steps
+        </h2>
 
         {recipe.steps?.length > 0 ? (
-          <ol className="mt-4 space-y-4">
+          <ol className="mt-5 space-y-4">
             {recipe.steps.map((step, index) => (
               <li
                 key={step.id}
-                className="rounded-2xl border border-stone-200 p-4"
+                className="rounded-2xl border border-stone-200 bg-rv-cream/45 p-4"
               >
-                <p className="text-sm font-medium text-stone-500">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-rv-plum/60">
                   Step {index + 1}
                 </p>
 
-                <p className="mt-2 text-sm text-stone-800">
+                <p className="mt-3 text-sm leading-6 text-stone-800">
                   {step.instruction}
                 </p>
               </li>
             ))}
           </ol>
         ) : (
-          <p className="mt-4 text-sm text-stone-700">No steps yet.</p>
+          <p className="mt-4 text-sm text-stone-600">No steps yet.</p>
         )}
       </Card>
 
-      <Card>
-        <h2 className="text-xl font-semibold">Notes</h2>
-        <p className="mt-4 text-sm text-stone-700">
+      <Card className="border-stone-300/70 bg-white/95">
+        <h2 className="text-2xl font-semibold tracking-tight text-rv-plum">
+          Notes
+        </h2>
+        <p className="mt-4 text-sm leading-6 text-stone-700">
           {recipe.notes || "No notes yet."}
         </p>
       </Card>

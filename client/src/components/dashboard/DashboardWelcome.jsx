@@ -50,7 +50,9 @@ export default function DashboardWelcome() {
               <Button variant="secondary">Browse Recipes</Button>
             </Link>
 
-            <Button variant="accent">Import Recipe</Button>
+            <Link to="/recipes/import">
+              <Button variant="accent">Import Recipe</Button>
+            </Link>
           </div>
         </div>
 

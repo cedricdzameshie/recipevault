@@ -4,6 +4,7 @@ import cookieParser from "cookie-parser";
 import recipesRouter from "./routes/recipes.js";
 import foldersRouter from "./routes/folders.js";
 import remindersRouter from "./routes/reminders.js";
+import importRouter from "./routes/import.js";
 
 const app = express();
 
@@ -24,5 +25,6 @@ app.get("/health", (req, res) => {
 app.use("/api/recipes", recipesRouter);
 app.use("/api/folders", foldersRouter);
 app.use("/api/reminders", remindersRouter);
+app.use("/api/import", importRouter);
 
 export default app;
