@@ -8,6 +8,9 @@ server/.env
 server/.env.*
 client/.env
 client/.env.*
+!*.env.example
+!server/.env.example
+!client/.env.example
 
 # build output
 dist
