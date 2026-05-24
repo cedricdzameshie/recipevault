@@ -22,11 +22,12 @@ const recipeImportSchema = {
           type: "object",
           additionalProperties: false,
           properties: {
+            originalLine: { type: "string" },
             name: { type: "string" },
             quantity: { type: ["string", "null"] },
             unit: { type: ["string", "null"] },
           },
-          required: ["name", "quantity", "unit"],
+          required: ["originalLine", "name", "quantity", "unit"],
         },
       },
       steps: {
@@ -64,15 +65,33 @@ function cleanRecipeText(text) {
     .trim();
 }
 
+function normalizeUrl(recipeUrl) {
+  const trimmed = recipeUrl.trim();
+
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+    return trimmed;
+  }
+
+  return `https://${trimmed}`;
+}
+
 async function extractTextFromUrl(recipeUrl) {
-  const response = await fetch(recipeUrl, {
+  const normalizedUrl = normalizeUrl(recipeUrl);
+
+  const response = await fetch(normalizedUrl, {
     headers: {
-      "User-Agent": "RecipeVaultBot/1.0",
+      "User-Agent":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) RecipeVaultBot/1.0",
+      Accept: "text/html,application/xhtml+xml",
+      "Accept-Language": "en-US,en;q=0.9",
     },
+    redirect: "follow",
   });
 
   if (!response.ok) {
-    throw new Error("Failed to fetch recipe URL");
+    throw new Error(
+      `Failed to fetch recipe URL: ${response.status} ${response.statusText}`,
+    );
   }
 
   const html = await response.text();
@@ -85,10 +104,18 @@ async function extractTextFromUrl(recipeUrl) {
     .replace(/<[^>]+>/g, " ")
     .replace(/&nbsp;/g, " ")
     .replace(/&amp;/g, "&")
+    .replace(/&#39;/g, "'")
+    .replace(/&quot;/g, '"')
     .replace(/\s+/g, " ")
     .trim();
 
-  return cleaned;
+  if (!cleaned || cleaned.length < 100) {
+    throw new Error(
+      "Could not extract enough recipe text from this URL. Try paste-text import instead.",
+    );
+  }
+
+  return cleaned.slice(0, 30000);
 }
 
 export async function importRecipeFromText(req, res) {
@@ -122,12 +149,16 @@ export async function importRecipeFromText(req, res) {
               type: "input_text",
               text: [
                 "You extract recipe information from messy pasted recipe text or recipe webpage text.",
-                "Ignore ads, popups, local offers, newsletter prompts, and unrelated site text.",
+                "Ignore ads, popups, local offers, newsletter prompts, comments, reviews, navigation, and unrelated site text.",
                 "Return only the structured fields requested.",
                 "If the recipe title is not explicit, infer a reasonable title from the ingredients and steps.",
-                "If a field is missing, use null for numbers and empty string for text.",
-                "Ingredients must be normalized into name, quantity, and unit.",
+                "Never drop quantities, package sizes, or measurements that appear in the source text.",
+                "Preserve the full original ingredient text in originalLine.",
+                "If an ingredient has package sizing like '1 (32 ounce) bag', preserve that detail in originalLine and use the clearest possible quantity/unit/name split.",
+                "If quantity and unit cannot be confidently separated, keep the full source ingredient in originalLine and put the clearest ingredient name in name.",
+                "Ingredients must be normalized into originalLine, name, quantity, and unit.",
                 "Steps must be returned as a clean ordered list.",
+                "If a field is missing, use null for numbers and empty string for text.",
               ].join(" "),
             },
           ],
@@ -156,6 +187,13 @@ export async function importRecipeFromText(req, res) {
     return res.json(parsed);
   } catch (error) {
     console.error("Error importing recipe:", error);
+
+    if (error?.code === "insufficient_quota") {
+      return res.status(429).json({
+        error:
+          "AI import is unavailable because the OpenAI API quota is exhausted. Check billing or API credits.",
+      });
+    }
 
     return res.status(500).json({
       error: error?.message || "Failed to import recipe",
