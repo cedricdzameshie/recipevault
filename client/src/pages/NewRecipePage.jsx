@@ -37,10 +37,25 @@ function buildRecipePayload(formValues) {
       }))
       .filter((ingredient) => ingredient.name),
     steps: (formValues.steps || [])
-      .filter((step) => step.instruction?.trim())
-      .map((step) => ({
-        instruction: step.instruction.trim(),
-      })),
+  .filter((step) => step.instruction?.trim())
+  .map((step) => ({
+    instruction: step.instruction.trim(),
+    prepNote: step.prepNote?.trim() || "",
+    timerMinutes: toNullableNumber(step.timerMinutes),
+    ingredients: (step.ingredients || [])
+      .filter(
+        (ingredient) =>
+          ingredient.ingredient?.trim() ||
+          ingredient.quantity?.trim() ||
+          ingredient.unit?.trim(),
+      )
+      .map((ingredient) => ({
+        name: ingredient.ingredient?.trim() || "",
+        quantity: ingredient.quantity?.trim() || null,
+        unit: ingredient.unit?.trim() || null,
+      }))
+      .filter((ingredient) => ingredient.name),
+  })),
   };
 }
 

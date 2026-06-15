@@ -47,13 +47,29 @@ model Ingredient {
 }
 
 model Step {
-  id          String   @id @default(uuid())
-  instruction String
-  position    Int
-  createdAt   DateTime @default(now())
+  id           String   @id @default(uuid())
+  instruction  String
+  prepNote     String?
+  timerMinutes Int?
+  position     Int
+  createdAt    DateTime @default(now())
 
   recipeId    String
   recipe      Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  ingredients StepIngredient[]
+}
+
+model StepIngredient {
+  id        String   @id @default(uuid())
+  name      String
+  quantity  String?
+  unit      String?
+  position  Int
+  createdAt DateTime @default(now())
+
+  stepId String
+  step   Step @relation(fields: [stepId], references: [id], onDelete: Cascade)
 }
 
 model Reminder {

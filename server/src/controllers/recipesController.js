@@ -7,6 +7,11 @@ const recipeInclude = {
   },
   steps: {
     orderBy: { position: "asc" },
+    include: {
+      ingredients: {
+        orderBy: { position: "asc" },
+      },
+    },
   },
   reminders: true,
 };
@@ -85,7 +90,20 @@ export async function createRecipe(req, res) {
         steps: {
           create: steps.map((step, index) => ({
             instruction: step.instruction,
+            prepNote: step.prepNote || null,
+            timerMinutes: step.timerMinutes ?? null,
             position: step.position ?? index + 1,
+
+            ingredients: {
+              create: (step.ingredients || []).map(
+                (ingredient, ingredientIndex) => ({
+                  name: ingredient.name,
+                  quantity: ingredient.quantity || null,
+                  unit: ingredient.unit || null,
+                  position: ingredient.position ?? ingredientIndex + 1,
+                }),
+              ),
+            },
           })),
         },
       },
@@ -158,13 +176,27 @@ export async function updateRecipe(req, res) {
         })),
       });
 
-      await tx.step.createMany({
-        data: steps.map((step, index) => ({
-          recipeId: id,
-          instruction: step.instruction,
-          position: step.position ?? index + 1,
-        })),
-      });
+      for (const [stepIndex, step] of steps.entries()) {
+        await tx.step.create({
+          data: {
+            recipeId: id,
+            instruction: step.instruction,
+            prepNote: step.prepNote || null,
+            timerMinutes: step.timerMinutes ?? null,
+            position: step.position ?? stepIndex + 1,
+            ingredients: {
+              create: (step.ingredients || []).map(
+                (ingredient, ingredientIndex) => ({
+                  name: ingredient.name,
+                  quantity: ingredient.quantity || null,
+                  unit: ingredient.unit || null,
+                  position: ingredient.position ?? ingredientIndex + 1,
+                }),
+              ),
+            },
+          },
+        });
+      }
 
       return tx.recipe.findUnique({
         where: { id },
