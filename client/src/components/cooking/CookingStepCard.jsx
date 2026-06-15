@@ -24,15 +24,22 @@ export default function CookingStepCard({ step, stepNumber }) {
             </p>
 
             <ul className="mt-3 space-y-2">
-              {step.ingredients.map((ingredient) => (
-                <li key={ingredient.id} className="text-sm text-stone-700">
-                  <span className="font-medium">
-                    {ingredient.quantity} {ingredient.unit}
-                  </span>{" "}
-                  {ingredient.ingredient}
-                </li>
-              ))}
-            </ul>
+  {step.ingredients.map((ingredient) => {
+    const ingredientText = [
+      ingredient.quantity,
+      ingredient.unit,
+      ingredient.name || ingredient.ingredient,
+    ]
+      .filter(Boolean)
+      .join(" ");
+
+    return (
+      <li key={ingredient.id} className="text-sm text-stone-700">
+        {ingredientText}
+      </li>
+    );
+  })}
+</ul>
           </div>
         )}
 

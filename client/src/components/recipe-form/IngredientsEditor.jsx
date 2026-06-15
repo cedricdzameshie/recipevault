@@ -29,6 +29,7 @@ export default function IngredientsEditor({
       <div className="space-y-4">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-xl font-semibold">Ingredients</h2>
+
           <Button type="button" variant="secondary" onClick={onAddIngredient}>
             Add Ingredient
           </Button>
@@ -60,17 +61,28 @@ export default function IngredientsEditor({
                   name="quantity"
                   value={ingredient.quantity}
                   onChange={(e) =>
-                    onIngredientChange(ingredient.id, "quantity", e.target.value)
+                    onIngredientChange(
+                      ingredient.id,
+                      "quantity",
+                      e.target.value,
+                    )
                   }
                   placeholder="2"
                 />
 
                 <label className="block space-y-2">
-                  <span className="text-sm font-medium text-stone-700">Unit</span>
+                  <span className="text-sm font-medium text-stone-700">
+                    Unit
+                  </span>
+
                   <select
                     value={ingredient.unit}
                     onChange={(e) =>
-                      onIngredientChange(ingredient.id, "unit", e.target.value)
+                      onIngredientChange(
+                        ingredient.id,
+                        "unit",
+                        e.target.value,
+                      )
                     }
                     className="w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-stone-500"
                   >
@@ -87,13 +99,23 @@ export default function IngredientsEditor({
                   name="ingredient"
                   value={ingredient.ingredient}
                   onChange={(e) =>
-                    onIngredientChange(ingredient.id, "ingredient", e.target.value)
+                    onIngredientChange(
+                      ingredient.id,
+                      "ingredient",
+                      e.target.value,
+                    )
                   }
                   placeholder="Flour"
                 />
               </div>
             </div>
           ))}
+        </div>
+
+        <div className="flex justify-center border-t border-stone-200 pt-4">
+          <Button type="button" variant="secondary" onClick={onAddIngredient}>
+            + Add Another Ingredient
+          </Button>
         </div>
       </div>
     </Card>

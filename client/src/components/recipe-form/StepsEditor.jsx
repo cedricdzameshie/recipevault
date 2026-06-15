@@ -18,6 +18,7 @@ export default function StepsEditor({
       <div className="space-y-4">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-xl font-semibold">Steps</h2>
+
           <Button type="button" variant="secondary" onClick={onAddStep}>
             Add Step
           </Button>
@@ -79,7 +80,12 @@ export default function StepsEditor({
                 <StepIngredientsEditor
                   ingredients={step.ingredients}
                   onIngredientChange={(ingredientId, field, value) =>
-                    onStepIngredientChange(step.id, ingredientId, field, value)
+                    onStepIngredientChange(
+                      step.id,
+                      ingredientId,
+                      field,
+                      value,
+                    )
                   }
                   onAddIngredient={() => onAddStepIngredient(step.id)}
                   onRemoveIngredient={(ingredientId) =>
@@ -89,6 +95,12 @@ export default function StepsEditor({
               </div>
             </div>
           ))}
+        </div>
+
+        <div className="flex justify-center border-t border-stone-200 pt-4">
+          <Button type="button" variant="secondary" onClick={onAddStep}>
+            + Add Another Step
+          </Button>
         </div>
       </div>
     </Card>

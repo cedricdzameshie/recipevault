@@ -135,9 +135,12 @@ export default function RecipeForm({
   }
 
   function handleStepChange(id, field, value) {
-    setSteps((prev) =>
-      prev.map((step) => (step.id === id ? { ...step, [field]: value } : step))
-    );
+
+  setSteps((prev) =>
+    prev.map((step) =>
+      step.id === id ? { ...step, [field]: value } : step
+    )
+  );
   }
 
   function handleAddStep() {
