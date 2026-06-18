@@ -171,8 +171,7 @@ export default function StepIngredientsEditor({
                           event.target.value,
                         )
                       }
-                      className="w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-900 outline-none transition hover:border-stone-400 focus:border-purple-700 focus:ring-2 focus:ring-purple-100"
-                    >
+                    className="w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-base text-stone-900 outline-none transition hover:border-stone-400 focus:border-purple-700 focus:ring-2 focus:ring-purple-100 sm:text-sm"                    >
                       {UNIT_OPTIONS.map((unit) => (
                         <option key={unit || "blank"} value={unit}>
                           {unit || "No unit"}

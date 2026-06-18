@@ -18,7 +18,7 @@ export default function Textarea({
         onChange={onChange}
         placeholder={placeholder}
         rows={rows}
-        className="w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-stone-500"
+        className="w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-base outline-none transition focus:border-stone-500 sm:text-sm"
       />
     </label>
   );

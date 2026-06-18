@@ -84,8 +84,7 @@ export default function IngredientsEditor({
                         e.target.value,
                       )
                     }
-                    className="w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-stone-500"
-                  >
+                    className="w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-base outline-none transition focus:border-stone-500 sm:text-sm"                  >
                     {UNIT_OPTIONS.map((unit) => (
                       <option key={unit || "blank"} value={unit}>
                         {unit || "No unit"}
@@ -96,7 +95,7 @@ export default function IngredientsEditor({
 
                 <Input
                   label="Ingredient"
-                  name="ingredient"
+     name="ingredient"
                   value={ingredient.ingredient}
                   onChange={(e) =>
                     onIngredientChange(
@@ -120,4 +119,4 @@ export default function IngredientsEditor({
       </div>
     </Card>
   );
-}
+}             
