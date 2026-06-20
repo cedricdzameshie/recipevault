@@ -72,6 +72,11 @@ export default function CookingModePage() {
   }, [recipe, activeStepIndex]);
 
   const currentStepNumber = activeStepIndex + 1;
+  
+  const progressPercentage =
+  totalSteps > 0
+    ? Math.round((currentStepNumber / totalSteps) * 100)
+    : 0;
 
   useEffect(() => {
     if (!recipe || !currentStep || isFinished) return;
@@ -210,40 +215,62 @@ export default function CookingModePage() {
 
   const editUrl = `/recipes/${recipe.id}/edit?returnTo=cook&step=${currentStepNumber}`;
 
-  return (
-    <section className="mx-auto max-w-3xl space-y-6">
-      <div className="flex items-center justify-between gap-4">
+return (
+  <section className="mx-auto max-w-3xl space-y-5 pb-8 sm:space-y-6">
+    <div className="flex items-center justify-between gap-6">
+      <div className="min-w-0 flex-1">
         <CookingHeader
           title={recipe.title}
           currentStepNumber={currentStepNumber}
           totalSteps={totalSteps}
         />
-
-        <div className="hidden gap-3 md:flex">
-          <Link
-            to={editUrl}
-            className="rounded-xl border border-stone-200 bg-white px-4 py-2 text-sm font-medium text-stone-900 transition hover:bg-stone-100"
-          >
-            Edit Recipe
-          </Link>
-
-          <Link
-            to={`/recipes/${recipe.id}`}
-            className="rounded-xl border border-stone-200 bg-white px-4 py-2 text-sm font-medium text-stone-900 transition hover:bg-stone-100"
-          >
-            Exit
-          </Link>
-        </div>
       </div>
 
-      <div className="h-2 overflow-hidden rounded-full bg-stone-200">
-        <div
-          className="h-full rounded-full bg-stone-900 transition-all"
-          style={{
-            width: `${(currentStepNumber / totalSteps) * 100}%`,
-          }}
-        />
+      <div className="hidden shrink-0 items-center gap-3 md:flex">
+        <Link
+          to={editUrl}
+          className="inline-flex h-11 items-center justify-center whitespace-nowrap rounded-xl border border-stone-200 bg-white px-5 text-sm font-medium text-rv-plum shadow-sm transition hover:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-rv-plum focus:ring-offset-2"
+        >
+          Edit Recipe
+        </Link>
+
+        <Link
+          to={`/recipes/${recipe.id}`}
+          className="inline-flex h-11 items-center justify-center whitespace-nowrap rounded-xl border border-stone-200 bg-white px-5 text-sm font-medium text-rv-plum shadow-sm transition hover:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-rv-plum focus:ring-offset-2"
+        >
+          Exit
+        </Link>
       </div>
+    </div>
+
+      <div className="space-y-2">
+  <div className="flex items-center justify-between gap-4">
+    <p className="text-sm font-medium text-stone-600">
+      Cooking progress
+    </p>
+
+    <p className="text-sm font-semibold text-rv-plum">
+      {progressPercentage}%
+    </p>
+  </div>
+
+  <div
+    role="progressbar"
+    aria-label="Cooking progress"
+    aria-valuemin={0}
+    aria-valuemax={100}
+    aria-valuenow={progressPercentage}
+    aria-valuetext={`Step ${currentStepNumber} of ${totalSteps}`}
+    className="h-2.5 overflow-hidden rounded-full bg-stone-200"
+  >
+    <div
+      className="h-full rounded-full bg-rv-plum transition-all duration-300 ease-out"
+      style={{
+        width: `${progressPercentage}%`,
+      }}
+    />
+  </div>
+</div>
 
       <CookingStepCard
         step={currentStep}
@@ -257,21 +284,23 @@ export default function CookingModePage() {
         canGoNext={activeStepIndex < totalSteps - 1}
       />
 
-      <div className="flex flex-wrap gap-3 md:hidden">
-        <Link
-          to={editUrl}
-          className="inline-flex items-center justify-center rounded-xl border border-stone-200 bg-white px-4 py-2 text-sm font-medium text-stone-900 transition hover:bg-stone-100"
-        >
-          Edit Recipe
-        </Link>
+      <div className="flex flex-wrap items-center justify-center gap-2 pt-1 md:hidden">
+  <Link
+    to={editUrl}
+    className="inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-medium text-stone-600 transition hover:bg-white/70 hover:text-rv-plum focus:outline-none focus:ring-2 focus:ring-rv-plum focus:ring-offset-2"
+  >
+    Edit Recipe
+  </Link>
 
-        <Link
-          to={`/recipes/${recipe.id}`}
-          className="inline-flex items-center justify-center rounded-xl border border-stone-200 bg-white px-4 py-2 text-sm font-medium text-stone-900 transition hover:bg-stone-100"
-        >
-          Exit Cooking Mode
-        </Link>
-      </div>
+  <span aria-hidden="true" className="h-5 w-px bg-stone-300" />
+
+  <Link
+    to={`/recipes/${recipe.id}`}
+    className="inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-medium text-stone-600 transition hover:bg-white/70 hover:text-rv-plum focus:outline-none focus:ring-2 focus:ring-rv-plum focus:ring-offset-2"
+  >
+    Exit Cooking Mode
+  </Link>
+</div>
     </section>
   );
 }
