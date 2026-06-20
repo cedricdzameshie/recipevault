@@ -17,6 +17,7 @@ const CLIENT_DIST_PATH = path.join(__dirname, "../../client/dist");
 
 const allowedOrigins = [
   process.env.CLIENT_URL,
+  process.env.LOCAL_CLIENT_URL,
   "https://recipes.dzameshie.dev",
   "http://localhost:5173",
   "http://127.0.0.1:5173",
