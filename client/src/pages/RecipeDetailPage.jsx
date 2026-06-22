@@ -15,12 +15,13 @@ import {
   getCookingProgress,
   updateCookingProgress,
 } from "../utils/cookingProgress";
-
+import { scaleIngredientQuantity } from "../utils/ingredientQuantity";
 
 export default function RecipeDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
 
+  const BATCH_SCALES = [1, 2, 4, 8];
   const [recipe, setRecipe] = useState(null);
   const [folders, setFolders] = useState([]);
   const [selectedFolderId, setSelectedFolderId] = useState("");
@@ -30,6 +31,7 @@ export default function RecipeDetailPage() {
   const [isUpdatingFolder, setIsUpdatingFolder] = useState(false);
   const [error, setError] = useState("");
   const [cookingProgress, setCookingProgress] = useState(null);
+  const batchScale = cookingProgress?.scale ?? 1;
 
   useEffect(() => {
     let isMounted = true;
@@ -70,6 +72,16 @@ export default function RecipeDetailPage() {
       isMounted = false;
     };
   }, [id]);
+
+  function handleBatchScaleChange(nextScale) {
+  if (!recipe) return;
+
+  const updatedProgress = updateCookingProgress(recipe.id, {
+    scale: nextScale,
+  });
+
+  setCookingProgress(updatedProgress);
+}
 
   function handleClearIngredientChecks() {
     if (!recipe || !cookingProgress) return;
@@ -359,6 +371,45 @@ export default function RecipeDetailPage() {
     Recipe Ingredients
   </h2>
 
+  <div className="mt-5 rounded-2xl border border-stone-200 bg-rv-cream/45 p-4">
+  <div className="flex flex-wrap items-center justify-between gap-3">
+    <div>
+      <p className="text-sm font-semibold text-stone-900">
+        Batch size
+      </p>
+
+      <p className="mt-1 text-xs text-stone-500">
+        Scale ingredient quantities without changing the saved recipe.
+      </p>
+    </div>
+
+    <div
+      className="inline-flex rounded-xl border border-stone-200 bg-white p-1"
+      aria-label="Batch size"
+    >
+      {BATCH_SCALES.map((scale) => {
+        const isActive = batchScale === scale;
+
+        return (
+          <button
+            key={scale}
+            type="button"
+            onClick={() => handleBatchScaleChange(scale)}
+            aria-pressed={isActive}
+            className={`min-h-10 min-w-12 rounded-lg px-3 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-rv-plum focus:ring-offset-2 ${
+              isActive
+                ? "bg-rv-plum text-white"
+                : "text-rv-plum hover:bg-stone-50"
+            }`}
+          >
+            {scale}×
+          </button>
+        );
+      })}
+    </div>
+  </div>
+</div>
+
   <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
     <p className="text-sm font-medium text-stone-600">
       {cookingProgress?.checkedIngredientIds?.length ?? 0} of{" "}
@@ -401,20 +452,27 @@ export default function RecipeDetailPage() {
               />
 
               <span
-                className={`text-sm ${
-                  isChecked
-                    ? "text-stone-500 line-through"
-                    : "text-stone-700"
-                }`}
-              >
-                <span className="font-semibold text-rv-plum">
-                  {[item.quantity, item.unit].filter(Boolean).join(" ")}
-                </span>
+  className={`text-sm ${
+    isChecked
+      ? "text-stone-500 line-through"
+      : "text-stone-700"
+  }`}
+>
+  <span className="font-semibold text-rv-plum">
+    {[
+      scaleIngredientQuantity(item.quantity, batchScale),
+      item.unit,
+    ]
+      .filter(Boolean)
+      .join(" ")}
+  </span>
 
-                {item.quantity || item.unit ? " " : ""}
+  {scaleIngredientQuantity(item.quantity, batchScale) || item.unit
+    ? " "
+    : ""}
 
-                {item.name}
-              </span>
+  {item.name}
+</span>
             </label>
           </li>
         );

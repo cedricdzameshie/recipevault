@@ -1,10 +1,13 @@
 import Card from "../common/Card";
+import { scaleIngredientQuantity } from "../../utils/ingredientQuantity";
+
 
 export default function CookingStepCard({
   step,
   stepNumber,
   checkedIngredientIds = [],
   onIngredientToggle,
+  batchScale = 1,
 }) {
   return (
     <Card className="overflow-hidden p-0">
@@ -31,7 +34,7 @@ export default function CookingStepCard({
               <ul className="mt-3 space-y-2.5">
                 {step.ingredients.map((ingredient) => {
                   const ingredientText = [
-                    ingredient.quantity,
+                    scaleIngredientQuantity(ingredient.quantity, batchScale),
                     ingredient.unit,
                     ingredient.name || ingredient.ingredient,
                   ]

@@ -17,6 +17,8 @@ export default function CookingModePage() {
   const requestedStepParam = searchParams.get("step");
   const isFocusMode = searchParams.get("focus") === "1";
 
+  const BATCH_SCALES = [1, 2, 4, 8];
+  const [batchScale, setBatchScale] = useState(1);
   const [recipe, setRecipe] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -79,6 +81,8 @@ if (totalSteps > 0) {
 setCheckedIngredientIds(
   savedProgress?.checkedIngredientIds ?? []
 );
+setBatchScale(savedProgress?.scale ?? 1);
+
 setCurrentStepIndex(initialStepIndex);
 
       } catch (err) {
@@ -151,6 +155,16 @@ function handleIngredientToggle(ingredientId) {
     });
 
     return nextIds;
+  });
+}
+
+function handleBatchScaleChange(nextScale) {
+  if (!recipe) return;
+
+  setBatchScale(nextScale);
+
+  updateCookingProgress(recipe.id, {
+    scale: nextScale,
   });
 }
 
@@ -365,11 +379,52 @@ return (
   </div>
 </div>
 
+<div className="rounded-2xl border border-stone-200 bg-white/80 p-4">
+  <div className="flex flex-wrap items-center justify-between gap-3">
+    <div>
+      <p className="text-sm font-semibold text-stone-900">
+        Batch size
+      </p>
+
+      <p className="mt-1 text-xs text-stone-500">
+        Ingredient quantities update automatically.
+      </p>
+    </div>
+
+    <div
+      className="inline-flex rounded-xl border border-stone-200 bg-white p-1"
+      aria-label="Batch size"
+    >
+      {BATCH_SCALES.map((scale) => {
+        const isActive = batchScale === scale;
+
+        return (
+          <button
+            key={scale}
+            type="button"
+            onClick={() => handleBatchScaleChange(scale)}
+            aria-pressed={isActive}
+            className={`min-h-10 min-w-12 rounded-lg px-3 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-rv-plum focus:ring-offset-2 ${
+              isActive
+                ? "bg-rv-plum text-white"
+                : "text-rv-plum hover:bg-stone-50"
+            }`}
+          >
+            {scale}×
+          </button>
+        );
+      })}
+    </div>
+  </div>
+</div>
+
+
       <CookingStepCard
   step={currentStep}
   stepNumber={currentStepNumber}
   checkedIngredientIds={checkedIngredientIds}
   onIngredientToggle={handleIngredientToggle}
+  batchScale={batchScale}
 />
 
       <CookingControls
