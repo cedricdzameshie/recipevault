@@ -23,6 +23,7 @@ export default function CookingModePage() {
   const [hasStartedNavigating, setHasStartedNavigating] = useState(false);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
+  const [checkedIngredientIds, setCheckedIngredientIds] = useState([]);
 
   useEffect(() => {
     let isMounted = true;
@@ -75,7 +76,9 @@ if (totalSteps > 0) {
     );
   }
 }
-
+setCheckedIngredientIds(
+  savedProgress?.checkedIngredientIds ?? []
+);
 setCurrentStepIndex(initialStepIndex);
 
       } catch (err) {
@@ -125,6 +128,31 @@ setCurrentStepIndex(initialStepIndex);
     stepNumber: currentStepNumber,
   });
 }, [recipe, currentStep, currentStepNumber, isFinished]);
+
+
+function handleIngredientToggle(ingredientId) {
+  if (!recipe) return;
+
+  setCheckedIngredientIds((previousIds) => {
+    const ingredientKey = String(ingredientId);
+
+    const isAlreadyChecked = previousIds.some(
+      (id) => String(id) === ingredientKey
+    );
+
+    const nextIds = isAlreadyChecked
+      ? previousIds.filter(
+          (id) => String(id) !== ingredientKey
+        )
+      : [...previousIds, ingredientId];
+
+    updateCookingProgress(recipe.id, {
+      checkedIngredientIds: nextIds,
+    });
+
+    return nextIds;
+  });
+}
 
   function handleFocusModeToggle() {
   const nextSearchParams = new URLSearchParams(searchParams);
@@ -338,9 +366,11 @@ return (
 </div>
 
       <CookingStepCard
-        step={currentStep}
-        stepNumber={currentStepNumber}
-      />
+  step={currentStep}
+  stepNumber={currentStepNumber}
+  checkedIngredientIds={checkedIngredientIds}
+  onIngredientToggle={handleIngredientToggle}
+/>
 
       <CookingControls
         onPrevious={handlePrevious}

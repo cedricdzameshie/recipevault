@@ -5,6 +5,7 @@ import RecipeBasicsFields from "./RecipeBasicsFields";
 import IngredientsEditor from "./IngredientsEditor";
 import StepsEditor from "./StepsEditor";
 import NotesEditor from "./NotesEditor";
+import { normalizeIngredientUnit } from "../../utils/ingredientUnits";
 
 function createId() {
   if (
@@ -89,7 +90,7 @@ function normalizeInitialData(initialData) {
         ? initialData.ingredients.map((ingredient) => ({
             id: ingredient.id || createId(),
             quantity: ingredient.quantity || "",
-            unit: ingredient.unit || "",
+            unit: normalizeIngredientUnit(ingredient.unit),
             ingredient: ingredient.name || ingredient.ingredient || "",
           }))
         : [createEmptyIngredient()],
@@ -105,7 +106,7 @@ function normalizeInitialData(initialData) {
                 ? step.ingredients.map((ingredient) => ({
                     id: ingredient.id || createId(),
                     quantity: ingredient.quantity || "",
-                    unit: ingredient.unit || "",
+                    unit: normalizeIngredientUnit(ingredient.unit),
                     ingredient: ingredient.name || ingredient.ingredient || "",
                   }))
                 : [createEmptyStepIngredient()],

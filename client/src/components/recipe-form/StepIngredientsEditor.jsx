@@ -1,22 +1,8 @@
 import { useState } from "react";
 import Input from "../common/Input";
 import Button from "../common/Button";
+import { INGREDIENT_UNIT_OPTIONS } from "../../utils/ingredientUnits";
 
-const UNIT_OPTIONS = [
-  "",
-  "tsp",
-  "tbsp",
-  "cup",
-  "oz",
-  "lb",
-  "g",
-  "kg",
-  "ml",
-  "l",
-  "pinch",
-  "dash",
-  "whole",
-];
 
 function hasIngredientContent(ingredient) {
   return Boolean(
@@ -172,7 +158,7 @@ export default function StepIngredientsEditor({
                         )
                       }
                     className="w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-base text-stone-900 outline-none transition hover:border-stone-400 focus:border-purple-700 focus:ring-2 focus:ring-purple-100 sm:text-sm"                    >
-                      {UNIT_OPTIONS.map((unit) => (
+                      {INGREDIENT_UNIT_OPTIONS.map((unit) => (
                         <option key={unit || "blank"} value={unit}>
                           {unit || "No unit"}
                         </option>

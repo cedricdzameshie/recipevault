@@ -2,22 +2,8 @@ import { useState } from "react";
 import Card from "../common/Card";
 import Button from "../common/Button";
 import Input from "../common/Input";
+import { INGREDIENT_UNIT_OPTIONS } from "../../utils/ingredientUnits";
 
-const UNIT_OPTIONS = [
-  "",
-  "tsp",
-  "tbsp",
-  "cup",
-  "oz",
-  "lb",
-  "g",
-  "kg",
-  "ml",
-  "l",
-  "pinch",
-  "dash",
-  "whole",
-];
 
 function hasIngredientContent(ingredient) {
   return Boolean(
@@ -174,7 +160,7 @@ export default function IngredientsEditor({
                         }
                         className="w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-base outline-none transition focus:border-stone-500 sm:text-sm"
                       >
-                        {UNIT_OPTIONS.map((unit) => (
+                        {INGREDIENT_UNIT_OPTIONS.map((unit) => (
                           <option key={unit || "blank"} value={unit}>
                             {unit || "No unit"}
                           </option>

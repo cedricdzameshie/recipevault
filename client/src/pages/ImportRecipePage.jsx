@@ -8,6 +8,7 @@ import Input from "../components/common/Input";
 import RecipeForm from "../components/recipe-form/RecipeForm";
 import { importRecipe } from "../api/import";
 import { createRecipe } from "../api/recipes";
+import { normalizeIngredientUnit } from "../utils/ingredientUnits";
 
 function toNullableNumber(value) {
   if (value === "" || value === null || value === undefined) {
@@ -37,7 +38,7 @@ function buildRecipePayload(formValues) {
       .map((ingredient) => ({
         name: ingredient.ingredient?.trim() || "",
         quantity: ingredient.quantity?.trim() || null,
-        unit: ingredient.unit?.trim() || null,
+        unit: normalizeIngredientUnit(ingredient.unit) || null,
       }))
       .filter((ingredient) => ingredient.name),
     steps: (formValues.steps || [])
@@ -174,7 +175,7 @@ export default function ImportRecipePage() {
             ingredients: importedRecipe.ingredients?.map((item) => ({
               id: crypto.randomUUID(),
               quantity: item.quantity || "",
-              unit: item.unit || "",
+              unit: normalizeIngredientUnit(item.unit) || "",
               ingredient: item.name || "",
             })),
             steps: importedRecipe.steps?.map((step) => ({

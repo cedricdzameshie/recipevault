@@ -1,6 +1,11 @@
 import Card from "../common/Card";
 
-export default function CookingStepCard({ step, stepNumber }) {
+export default function CookingStepCard({
+  step,
+  stepNumber,
+  checkedIngredientIds = [],
+  onIngredientToggle,
+}) {
   return (
     <Card className="overflow-hidden p-0">
       <div className="border-b border-stone-200 bg-stone-50/70 px-5 py-6 sm:px-7 sm:py-8">
@@ -33,17 +38,38 @@ export default function CookingStepCard({ step, stepNumber }) {
                     .filter(Boolean)
                     .join(" ");
 
-                  return (
-                    <li
-                      key={ingredient.id}
-                      className="flex items-start gap-2.5 text-sm leading-6 text-stone-700"
-                    >
-                      <span
-                        aria-hidden="true"
-                        className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-rv-plum"
-                      />
+                  const isChecked = checkedIngredientIds.some(
+                    (id) => String(id) === String(ingredient.id)
+                  );
 
-                      <span>{ingredientText}</span>
+                  return (
+                    <li key={ingredient.id}>
+                      <label
+                        className={`flex min-h-11 cursor-pointer items-start gap-3 rounded-xl border px-3 py-2.5 transition ${
+                          isChecked
+                            ? "border-rv-plum/20 bg-rv-plum/10"
+                            : "border-transparent hover:bg-white"
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() =>
+                            onIngredientToggle?.(ingredient.id)
+                          }
+                          className="mt-1 h-5 w-5 shrink-0 accent-rv-plum"
+                        />
+
+                        <span
+                          className={`text-sm leading-6 transition ${
+                            isChecked
+                              ? "text-stone-500 line-through"
+                              : "text-stone-700"
+                          }`}
+                        >
+                          {ingredientText}
+                        </span>
+                      </label>
                     </li>
                   );
                 })}

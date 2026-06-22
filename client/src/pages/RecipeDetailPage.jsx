@@ -13,6 +13,7 @@ import { fetchFolders } from "../api/folders";
 import {
   clearCookingProgress,
   getCookingProgress,
+  updateCookingProgress,
 } from "../utils/cookingProgress";
 
 
@@ -29,6 +30,7 @@ export default function RecipeDetailPage() {
   const [isUpdatingFolder, setIsUpdatingFolder] = useState(false);
   const [error, setError] = useState("");
   const [cookingProgress, setCookingProgress] = useState(null);
+
   useEffect(() => {
     let isMounted = true;
 
@@ -68,6 +70,45 @@ export default function RecipeDetailPage() {
       isMounted = false;
     };
   }, [id]);
+
+  function handleClearIngredientChecks() {
+    if (!recipe || !cookingProgress) return;
+
+    const confirmed = window.confirm(
+      "Clear all checked ingredients for this recipe?"
+    );
+
+    if (!confirmed) return;
+
+    const updatedProgress = updateCookingProgress(recipe.id, {
+      checkedIngredientIds: [],
+    });
+
+    setCookingProgress(updatedProgress);
+  }
+
+  function handleIngredientToggle(ingredientId) {
+    if (!recipe) return;
+
+    const previousIds = cookingProgress?.checkedIngredientIds ?? [];
+    const ingredientKey = String(ingredientId);
+
+    const isAlreadyChecked = previousIds.some(
+      (savedId) => String(savedId) === ingredientKey
+    );
+
+    const nextIds = isAlreadyChecked
+      ? previousIds.filter(
+          (savedId) => String(savedId) !== ingredientKey
+        )
+      : [...previousIds, ingredientId];
+
+    const updatedProgress = updateCookingProgress(recipe.id, {
+      checkedIngredientIds: nextIds,
+    });
+
+    setCookingProgress(updatedProgress);
+  }
 
   function handleStartOver() {
   if (!recipe) return;
@@ -313,30 +354,78 @@ export default function RecipeDetailPage() {
         </div>
       </Card>
 
-      <Card className="border-stone-300/70 bg-white/95">
-        <h2 className="text-2xl font-semibold tracking-tight text-rv-plum">
-          Recipe Ingredients
-        </h2>
+<Card className="border-stone-300/70 bg-white/95">
+  <h2 className="text-2xl font-semibold tracking-tight text-rv-plum">
+    Recipe Ingredients
+  </h2>
 
-        {recipe.ingredients?.length > 0 ? (
-          <ul className="mt-5 space-y-3">
-            {recipe.ingredients.map((item) => (
-              <li
-                key={item.id}
-                className="rounded-2xl border border-stone-200 bg-rv-cream/45 px-4 py-3 text-sm text-stone-700"
+  <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+    <p className="text-sm font-medium text-stone-600">
+      {cookingProgress?.checkedIngredientIds?.length ?? 0} of{" "}
+      {recipe.ingredients?.length ?? 0} checked
+    </p>
+
+    {(cookingProgress?.checkedIngredientIds?.length ?? 0) > 0 && (
+      <button
+        type="button"
+        onClick={handleClearIngredientChecks}
+        className="text-sm font-medium text-rv-plum transition hover:text-rv-plum/75"
+      >
+        Clear checks
+      </button>
+    )}
+  </div>
+
+  {recipe.ingredients?.length > 0 ? (
+    <ul className="mt-4 space-y-3">
+      {recipe.ingredients.map((item) => {
+        const isChecked =
+          cookingProgress?.checkedIngredientIds?.some(
+            (id) => String(id) === String(item.id)
+          ) ?? false;
+
+        return (
+          <li key={item.id}>
+            <label
+              className={`flex min-h-14 cursor-pointer items-center gap-3 rounded-2xl border px-4 py-3 transition ${
+                isChecked
+                  ? "border-rv-plum/20 bg-rv-plum/10"
+                  : "border-stone-200 bg-rv-cream/45 hover:bg-white"
+              }`}
+            >
+              <input
+                type="checkbox"
+                checked={isChecked}
+                onChange={() => handleIngredientToggle(item.id)}
+                className="h-5 w-5 shrink-0 accent-rv-plum"
+              />
+
+              <span
+                className={`text-sm ${
+                  isChecked
+                    ? "text-stone-500 line-through"
+                    : "text-stone-700"
+                }`}
               >
                 <span className="font-semibold text-rv-plum">
                   {[item.quantity, item.unit].filter(Boolean).join(" ")}
                 </span>
+
                 {item.quantity || item.unit ? " " : ""}
+
                 {item.name}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="mt-4 text-sm text-stone-600">No ingredients yet.</p>
-        )}
-      </Card>
+              </span>
+            </label>
+          </li>
+        );
+      })}
+    </ul>
+  ) : (
+    <p className="mt-4 text-sm text-stone-600">
+      No ingredients yet.
+    </p>
+  )}
+</Card>
 
       <Card className="border-stone-300/70 bg-white/95">
         <h2 className="text-2xl font-semibold tracking-tight text-rv-plum">
