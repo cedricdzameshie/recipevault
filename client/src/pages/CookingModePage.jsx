@@ -4,10 +4,18 @@ import CookingHeader from "../components/cooking/CookingHeader";
 import CookingStepCard from "../components/cooking/CookingStepCard";
 import CookingControls from "../components/cooking/CookingControls";
 import { fetchRecipeById } from "../api/recipes";
+import {
+  clearCookingProgress,
+  getCookingProgress,
+  updateCookingProgress,
+} from "../utils/cookingProgress";
 
 export default function CookingModePage() {
   const { id } = useParams();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const requestedStepParam = searchParams.get("step");
+  const isFocusMode = searchParams.get("focus") === "1";
 
   const [recipe, setRecipe] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -30,15 +38,46 @@ export default function CookingModePage() {
 
         setRecipe(data);
 
-        const totalSteps = data?.steps?.length ?? 0;
-        const requestedStep = Number(searchParams.get("step") || "1");
+        const steps = data?.steps ?? [];
+const totalSteps = steps.length;
+const savedProgress = getCookingProgress(data.id);
 
-        const safeInitialStepIndex =
-          totalSteps > 0
-            ? Math.min(Math.max(requestedStep - 1, 0), totalSteps - 1)
-            : 0;
+let initialStepIndex = 0;
 
-        setCurrentStepIndex(safeInitialStepIndex);
+if (totalSteps > 0) {
+  if (savedProgress) {
+    const savedStepIndex =
+      savedProgress.stepId !== null
+        ? steps.findIndex(
+            (step) =>
+              String(step.id) === String(savedProgress.stepId)
+          )
+        : -1;
+
+    if (savedStepIndex >= 0) {
+      initialStepIndex = savedStepIndex;
+    } else {
+      initialStepIndex = Math.min(
+        Math.max(savedProgress.stepNumber - 1, 0),
+        totalSteps - 1
+      );
+    }
+  } else {
+    const parsedRequestedStep = Number(requestedStepParam);
+
+    const requestedStep = Number.isFinite(parsedRequestedStep)
+      ? parsedRequestedStep
+      : 1;
+
+    initialStepIndex = Math.min(
+      Math.max(requestedStep - 1, 0),
+      totalSteps - 1
+    );
+  }
+}
+
+setCurrentStepIndex(initialStepIndex);
+
       } catch (err) {
         console.error("Failed to load cooking recipe:", err);
 
@@ -58,7 +97,7 @@ export default function CookingModePage() {
     return () => {
       isMounted = false;
     };
-  }, [id, searchParams]);
+}, [id, requestedStepParam]);
 
   const totalSteps = recipe?.steps?.length ?? 0;
 
@@ -79,16 +118,25 @@ export default function CookingModePage() {
     : 0;
 
   useEffect(() => {
-    if (!recipe || !currentStep || isFinished) return;
+  if (!recipe || !currentStep || isFinished) return;
 
-    localStorage.setItem(
-      "continueCooking",
-      JSON.stringify({
-        recipeId: recipe.id,
-        step: currentStepNumber,
-      })
-    );
-  }, [recipe, currentStep, currentStepNumber, isFinished]);
+  updateCookingProgress(recipe.id, {
+    stepId: currentStep.id ?? null,
+    stepNumber: currentStepNumber,
+  });
+}, [recipe, currentStep, currentStepNumber, isFinished]);
+
+  function handleFocusModeToggle() {
+  const nextSearchParams = new URLSearchParams(searchParams);
+
+  if (isFocusMode) {
+    nextSearchParams.delete("focus");
+  } else {
+    nextSearchParams.set("focus", "1");
+  }
+
+  setSearchParams(nextSearchParams);
+}
 
   function handlePrevious() {
     setHasStartedNavigating(true);
@@ -105,25 +153,27 @@ export default function CookingModePage() {
       setCurrentStepIndex((prev) => prev + 1);
     } else {
       setIsFinished(true);
-      localStorage.removeItem("continueCooking");
+      clearCookingProgress(recipe.id);
     }
   }
 
   function handleStartAgain() {
-    setHasStartedNavigating(true);
-    setCurrentStepIndex(0);
-    setIsFinished(false);
+  setHasStartedNavigating(true);
+  setCurrentStepIndex(0);
+  setIsFinished(false);
 
-    if (recipe) {
-      localStorage.setItem(
-        "continueCooking",
-        JSON.stringify({
-          recipeId: recipe.id,
-          step: 1,
-        })
-      );
-    }
-  }
+  if (!recipe) return;
+
+  clearCookingProgress(recipe.id);
+
+  updateCookingProgress(recipe.id, {
+    stepId: recipe.steps?.[0]?.id ?? null,
+    stepNumber: 1,
+    scale: 1,
+    checkedIngredientIds: [],
+    timers: [],
+  });
+}
 
   if (isLoading) {
     return (
@@ -225,6 +275,21 @@ return (
           totalSteps={totalSteps}
         />
       </div>
+
+<div className="flex justify-end md:hidden">
+  <button
+    type="button"
+    onClick={handleFocusModeToggle}
+    aria-pressed={isFocusMode}
+    className={`inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-rv-plum focus:ring-offset-2 ${
+      isFocusMode
+        ? "bg-rv-plum text-white hover:bg-rv-plum/90"
+        : "border border-stone-200 bg-white text-rv-plum hover:bg-stone-50"
+    }`}
+  >
+    {isFocusMode ? "Exit Focus" : "Enter Focus Mode"}
+  </button>
+</div>
 
       <div className="hidden shrink-0 items-center gap-3 md:flex">
         <Link

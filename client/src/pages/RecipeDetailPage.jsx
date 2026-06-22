@@ -10,6 +10,11 @@ import {
   updateRecipeFolder,
 } from "../api/recipes";
 import { fetchFolders } from "../api/folders";
+import {
+  clearCookingProgress,
+  getCookingProgress,
+} from "../utils/cookingProgress";
+
 
 export default function RecipeDetailPage() {
   const { id } = useParams();
@@ -23,7 +28,7 @@ export default function RecipeDetailPage() {
   const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
   const [isUpdatingFolder, setIsUpdatingFolder] = useState(false);
   const [error, setError] = useState("");
-
+  const [cookingProgress, setCookingProgress] = useState(null);
   useEffect(() => {
     let isMounted = true;
 
@@ -41,6 +46,7 @@ export default function RecipeDetailPage() {
           setRecipe(recipeData);
           setFolders(foldersData);
           setSelectedFolderId(recipeData.folderId || "");
+          setCookingProgress(getCookingProgress(recipeData.id));
         }
       } catch (err) {
         console.error("Failed to load recipe:", err);
@@ -63,6 +69,21 @@ export default function RecipeDetailPage() {
     };
   }, [id]);
 
+  function handleStartOver() {
+  if (!recipe) return;
+
+  const confirmed = window.confirm(
+    `Start "${recipe.title}" over from Step 1? Your saved cooking progress will be cleared.`
+  );
+
+  if (!confirmed) return;
+
+  clearCookingProgress(recipe.id);
+  setCookingProgress(null);
+
+  navigate(`/recipes/${recipe.id}/cook?step=1`);
+}
+
   async function handleDeleteRecipe() {
     const confirmed = window.confirm(
       `Are you sure you want to delete "${recipe.title}"?`
@@ -73,7 +94,10 @@ export default function RecipeDetailPage() {
     try {
       setIsDeleting(true);
       await deleteRecipeById(recipe.id);
+      navigate("/recipes");await deleteRecipeById(recipe.id);
+      clearCookingProgress(recipe.id);
       navigate("/recipes");
+      
     } catch (err) {
       console.error("Failed to delete recipe:", err);
       alert(err.message || "Failed to delete recipe");
@@ -148,9 +172,27 @@ export default function RecipeDetailPage() {
         backLabel="Back to Recipes"
         action={
           <div className="flex flex-wrap gap-3">
-            <Link to={`/recipes/${recipe.id}/cook?step=1`}>
-              <Button>Start Cooking</Button>
-            </Link>
+            {cookingProgress ? (
+  <>
+    <Link to={`/recipes/${recipe.id}/cook`}>
+      <Button>
+        Resume Cooking — Step {cookingProgress.stepNumber}
+      </Button>
+    </Link>
+
+    <Button
+      type="button"
+      variant="secondary"
+      onClick={handleStartOver}
+    >
+      Start Over
+    </Button>
+  </>
+) : (
+  <Link to={`/recipes/${recipe.id}/cook?step=1`}>
+    <Button>Start Cooking</Button>
+  </Link>
+)}
 
             <Link to={`/recipes/${recipe.id}/edit`}>
               <Button variant="secondary">Edit</Button>
