@@ -11,23 +11,23 @@ model Folder {
   name      String
   createdAt DateTime @default(now())
 
-  recipes   Recipe[]
+  recipes Recipe[]
 }
 
 model Recipe {
-  id          String       @id @default(uuid())
+  id          String   @id @default(uuid())
   title       String
   description String?
   servings    Int?
   prepTime    Int?
   cookTime    Int?
   notes       String?
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  isFavorite  Boolean      @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  isFavorite  Boolean  @default(false)
 
-  folderId    String?
-  folder      Folder?      @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  folderId String?
+  folder   Folder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
 
   ingredients Ingredient[]
   steps       Step[]
@@ -42,8 +42,10 @@ model Ingredient {
   position  Int
   createdAt DateTime @default(now())
 
-  recipeId  String
-  recipe    Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  recipeId String
+  recipe   Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  stepIngredients StepIngredient[]
 }
 
 model Step {
@@ -54,8 +56,8 @@ model Step {
   position     Int
   createdAt    DateTime @default(now())
 
-  recipeId    String
-  recipe      Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  recipeId String
+  recipe   Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
 
   ingredients StepIngredient[]
 }
@@ -69,7 +71,10 @@ model StepIngredient {
   createdAt DateTime @default(now())
 
   stepId String
-  step   Step @relation(fields: [stepId], references: [id], onDelete: Cascade)
+  step   Step   @relation(fields: [stepId], references: [id], onDelete: Cascade)
+
+  ingredientId String?
+  ingredient   Ingredient? @relation(fields: [ingredientId], references: [id], onDelete: SetNull)
 }
 
 model Reminder {
@@ -79,6 +84,6 @@ model Reminder {
   complete  Boolean  @default(false)
   createdAt DateTime @default(now())
 
-  recipeId  String?
-  recipe    Recipe?  @relation(fields: [recipeId], references: [id], onDelete: SetNull)
+  recipeId String?
+  recipe   Recipe? @relation(fields: [recipeId], references: [id], onDelete: SetNull)
 }
