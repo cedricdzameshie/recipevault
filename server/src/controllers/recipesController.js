@@ -145,13 +145,15 @@ export async function updateRecipe(req, res) {
     }
 
     const updatedRecipe = await prisma.$transaction(async (tx) => {
-      await tx.ingredient.deleteMany({
+      const existingIngredients = await tx.ingredient.findMany({
         where: { recipeId: id },
       });
 
-      await tx.step.deleteMany({
-        where: { recipeId: id },
-      });
+      const existingIngredientIds = new Set(
+        existingIngredients.map((ingredient) => ingredient.id),
+      );
+
+      const retainedIngredientIds = [];
 
       await tx.recipe.update({
         where: { id },
@@ -166,14 +168,55 @@ export async function updateRecipe(req, res) {
         },
       });
 
-      await tx.ingredient.createMany({
-        data: ingredients.map((ingredient, index) => ({
-          recipeId: id,
-          name: ingredient.name,
-          quantity: ingredient.quantity || null,
-          unit: ingredient.unit || null,
-          position: ingredient.position ?? index + 1,
-        })),
+      for (const [ingredientIndex, ingredient] of ingredients.entries()) {
+        const isExistingIngredient =
+          ingredient.id && existingIngredientIds.has(ingredient.id);
+
+        if (isExistingIngredient) {
+          await tx.ingredient.update({
+            where: { id: ingredient.id },
+            data: {
+              name: ingredient.name,
+              quantity: ingredient.quantity || null,
+              unit: ingredient.unit || null,
+              position: ingredient.position ?? ingredientIndex + 1,
+            },
+          });
+
+          retainedIngredientIds.push(ingredient.id);
+          continue;
+        }
+
+        const createdIngredient = await tx.ingredient.create({
+          data: {
+            recipeId: id,
+            name: ingredient.name,
+            quantity: ingredient.quantity || null,
+            unit: ingredient.unit || null,
+            position: ingredient.position ?? ingredientIndex + 1,
+          },
+        });
+
+        retainedIngredientIds.push(createdIngredient.id);
+      }
+
+      if (retainedIngredientIds.length > 0) {
+        await tx.ingredient.deleteMany({
+          where: {
+            recipeId: id,
+            id: {
+              notIn: retainedIngredientIds,
+            },
+          },
+        });
+      } else {
+        await tx.ingredient.deleteMany({
+          where: { recipeId: id },
+        });
+      }
+
+      await tx.step.deleteMany({
+        where: { recipeId: id },
       });
 
       for (const [stepIndex, step] of steps.entries()) {

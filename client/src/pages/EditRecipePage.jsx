@@ -32,11 +32,12 @@ function buildRecipePayload(formValues) {
           ingredient.unit?.trim()
       )
       .map((ingredient) => ({
-        name: ingredient.ingredient?.trim() || "",
-        quantity: ingredient.quantity?.trim() || null,
-        unit: normalizeIngredientUnit(ingredient.unit) || null,
-      }))
-      .filter((ingredient) => ingredient.name),
+    id: ingredient.id || null,
+    name: ingredient.ingredient?.trim() || "",
+    quantity: ingredient.quantity?.trim() || null,
+    unit: normalizeIngredientUnit(ingredient.unit) || null,
+  }))
+  .filter((ingredient) => ingredient.name),
     steps: (formValues.steps || [])
   .filter((step) => step.instruction?.trim())
   .map((step) => ({
