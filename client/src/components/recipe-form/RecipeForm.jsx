@@ -42,6 +42,7 @@ function createEmptyIngredient() {
 function createEmptyStepIngredient() {
   return {
     id: createId(),
+    ingredientId: null,
     quantity: "",
     unit: "",
     ingredient: "",
@@ -104,11 +105,16 @@ function normalizeInitialData(initialData) {
             ingredients:
               step.ingredients?.length > 0
                 ? step.ingredients.map((ingredient) => ({
-                    id: ingredient.id || createId(),
-                    quantity: ingredient.quantity || "",
-                    unit: normalizeIngredientUnit(ingredient.unit),
-                    ingredient: ingredient.name || ingredient.ingredient || "",
-                  }))
+                  id: ingredient.id || createId(),
+                  ingredientId: ingredient.ingredientId || null,
+                  quantity: ingredient.quantity || "",
+                  unit: normalizeIngredientUnit(ingredient.unit),
+                  ingredient:
+                    ingredient.ingredient?.name ||
+                    ingredient.name ||
+                    ingredient.ingredient ||
+                    "",
+                }))
                 : [createEmptyStepIngredient()],
           }))
         : [createEmptyStep()],
@@ -258,6 +264,7 @@ export default function RecipeForm({
       />
 
       <StepsEditor
+        recipeIngredients={ingredients}
         steps={steps}
         onStepChange={handleStepChange}
         onAddStep={handleAddStep}

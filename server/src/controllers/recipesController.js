@@ -10,6 +10,9 @@ const recipeInclude = {
     include: {
       ingredients: {
         orderBy: { position: "asc" },
+        include: {
+          ingredient: true,
+        },
       },
     },
   },
@@ -120,6 +123,7 @@ export async function createRecipe(req, res) {
 export async function updateRecipe(req, res) {
   try {
     const { id } = req.params;
+
     const {
       title,
       description,
@@ -154,6 +158,7 @@ export async function updateRecipe(req, res) {
       );
 
       const retainedIngredientIds = [];
+      const ingredientIdMap = new Map();
 
       await tx.recipe.update({
         where: { id },
@@ -168,6 +173,10 @@ export async function updateRecipe(req, res) {
         },
       });
 
+      /*
+       * Update existing master ingredients while preserving their IDs.
+       * Create database records for newly added ingredients.
+       */
       for (const [ingredientIndex, ingredient] of ingredients.entries()) {
         const isExistingIngredient =
           ingredient.id && existingIngredientIds.has(ingredient.id);
@@ -184,6 +193,10 @@ export async function updateRecipe(req, res) {
           });
 
           retainedIngredientIds.push(ingredient.id);
+
+          // Existing client ID and database ID are the same.
+          ingredientIdMap.set(ingredient.id, ingredient.id);
+
           continue;
         }
 
@@ -198,8 +211,19 @@ export async function updateRecipe(req, res) {
         });
 
         retainedIngredientIds.push(createdIngredient.id);
+
+        /*
+         * Connect the temporary client ID to the real ID created
+         * by the database.
+         */
+        if (ingredient.id) {
+          ingredientIdMap.set(ingredient.id, createdIngredient.id);
+        }
       }
 
+      /*
+       * Delete master ingredients that were removed from the form.
+       */
       if (retainedIngredientIds.length > 0) {
         await tx.ingredient.deleteMany({
           where: {
@@ -215,6 +239,10 @@ export async function updateRecipe(req, res) {
         });
       }
 
+      /*
+       * Step IDs are still recreated for now.
+       * We can preserve step IDs in a later improvement.
+       */
       await tx.step.deleteMany({
         where: { recipeId: id },
       });
@@ -227,14 +255,22 @@ export async function updateRecipe(req, res) {
             prepNote: step.prepNote || null,
             timerMinutes: step.timerMinutes ?? null,
             position: step.position ?? stepIndex + 1,
+
             ingredients: {
               create: (step.ingredients || []).map(
-                (ingredient, ingredientIndex) => ({
-                  name: ingredient.name,
-                  quantity: ingredient.quantity || null,
-                  unit: ingredient.unit || null,
-                  position: ingredient.position ?? ingredientIndex + 1,
-                }),
+                (ingredient, ingredientIndex) => {
+                  const linkedIngredientId = ingredient.ingredientId
+                    ? ingredientIdMap.get(ingredient.ingredientId) || null
+                    : null;
+
+                  return {
+                    name: ingredient.name,
+                    quantity: ingredient.quantity || null,
+                    unit: ingredient.unit || null,
+                    position: ingredient.position ?? ingredientIndex + 1,
+                    ingredientId: linkedIngredientId,
+                  };
+                },
               ),
             },
           },

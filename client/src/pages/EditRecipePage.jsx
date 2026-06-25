@@ -24,40 +24,48 @@ function buildRecipePayload(formValues) {
     cookTime: toNullableNumber(formValues.cookTime),
     notes: formValues.notes?.trim() || "",
     folderId: formValues.folderId || null,
+
     ingredients: (formValues.ingredients || [])
       .filter(
         (ingredient) =>
           ingredient.ingredient?.trim() ||
           ingredient.quantity?.trim() ||
-          ingredient.unit?.trim()
+          ingredient.unit?.trim(),
       )
       .map((ingredient) => ({
-    id: ingredient.id || null,
-    name: ingredient.ingredient?.trim() || "",
-    quantity: ingredient.quantity?.trim() || null,
-    unit: normalizeIngredientUnit(ingredient.unit) || null,
-  }))
-  .filter((ingredient) => ingredient.name),
-    steps: (formValues.steps || [])
-  .filter((step) => step.instruction?.trim())
-  .map((step) => ({
-    instruction: step.instruction.trim(),
-    prepNote: step.prepNote?.trim() || "",
-    timerMinutes: toNullableNumber(step.timerMinutes),
-    ingredients: (step.ingredients || [])
-      .filter(
-        (ingredient) =>
-          ingredient.ingredient?.trim() ||
-          ingredient.quantity?.trim() ||
-          ingredient.unit?.trim()
-      )
-      .map((ingredient) => ({
+        id: ingredient.id || null,
         name: ingredient.ingredient?.trim() || "",
         quantity: ingredient.quantity?.trim() || null,
         unit: normalizeIngredientUnit(ingredient.unit) || null,
       }))
       .filter((ingredient) => ingredient.name),
-  })),
+
+    steps: (formValues.steps || [])
+      .filter((step) => step.instruction?.trim())
+      .map((step) => ({
+        instruction: step.instruction.trim(),
+        prepNote: step.prepNote?.trim() || "",
+        timerMinutes: toNullableNumber(step.timerMinutes),
+
+        ingredients: (step.ingredients || [])
+          .filter(
+            (ingredient) =>
+              ingredient.ingredientId ||
+              ingredient.ingredient?.trim() ||
+              ingredient.quantity?.trim() ||
+              ingredient.unit?.trim(),
+          )
+          .map((ingredient) => ({
+            ingredientId: ingredient.ingredientId || null,
+            name: ingredient.ingredient?.trim() || "",
+            quantity: ingredient.quantity?.trim() || null,
+            unit: normalizeIngredientUnit(ingredient.unit) || null,
+          }))
+          .filter(
+            (ingredient) =>
+              ingredient.ingredientId || ingredient.name,
+          ),
+      })),
   };
 }
 

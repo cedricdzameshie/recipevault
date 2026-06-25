@@ -38,6 +38,7 @@ function createInstructionPreview(instruction) {
 }
 
 export default function StepsEditor({
+  recipeIngredients,
   steps,
   onStepChange,
   onAddStep,
@@ -328,19 +329,16 @@ export default function StepsEditor({
                         </div>
 
                         <StepIngredientsEditor
+                          recipeIngredients={recipeIngredients}
                           ingredients={step.ingredients}
-                          onIngredientChange={(
+                          onIngredientChange={(ingredientId, field, value) =>
+                            onStepIngredientChange(
+                            step.id,
                             ingredientId,
                             field,
                             value,
-                          ) =>
-                            onStepIngredientChange(
-                              step.id,
-                              ingredientId,
-                              field,
-                              value,
-                            )
-                          }
+                          )
+                        }
                           onAddIngredient={() =>
                             onAddStepIngredient(step.id)
                           }
