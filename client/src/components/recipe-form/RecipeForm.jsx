@@ -214,22 +214,84 @@ export default function RecipeForm({
     );
   }
 
-  function handleRemoveStepIngredient(stepId, ingredientId) {
-    setSteps((prev) =>
-      prev.map((step) => {
-        if (step.id !== stepId) return step;
+  function handleAddLinkedStepIngredient(stepId, recipeIngredient) {
+  setSteps((previousSteps) =>
+    previousSteps.map((step) => {
+      if (step.id !== stepId) {
+        return step;
+      }
 
-        if (step.ingredients.length === 1) return step;
+      const isAlreadyLinked = step.ingredients.some(
+        (stepIngredient) =>
+          stepIngredient.ingredientId === recipeIngredient.id,
+      );
+
+      if (isAlreadyLinked) {
+        return step;
+      }
+
+      const linkedIngredient = {
+        id: createId(),
+        ingredientId: recipeIngredient.id,
+        quantity: "",
+        unit: "",
+        ingredient: recipeIngredient.ingredient,
+      };
+
+      const hasEmptyIngredientRow = step.ingredients.some(
+        (stepIngredient) =>
+          !stepIngredient.ingredientId &&
+          !stepIngredient.quantity?.trim() &&
+          !stepIngredient.unit?.trim() &&
+          !stepIngredient.ingredient?.trim(),
+      );
+
+      if (hasEmptyIngredientRow) {
+        let replacedEmptyRow = false;
 
         return {
           ...step,
-          ingredients: step.ingredients.filter(
-            (ingredient) => ingredient.id !== ingredientId
-          ),
+          ingredients: step.ingredients.map((stepIngredient) => {
+            const isEmptyRow =
+              !stepIngredient.ingredientId &&
+              !stepIngredient.quantity?.trim() &&
+              !stepIngredient.unit?.trim() &&
+              !stepIngredient.ingredient?.trim();
+
+            if (isEmptyRow && !replacedEmptyRow) {
+              replacedEmptyRow = true;
+              return linkedIngredient;
+            }
+
+            return stepIngredient;
+          }),
         };
-      })
-    );
-  }
+      }
+
+      return {
+        ...step,
+        ingredients: [...step.ingredients, linkedIngredient],
+      };
+    }),
+  );
+}
+
+  function handleRemoveStepIngredient(stepId, ingredientId) {
+  setSteps((previousSteps) =>
+    previousSteps.map((step) => {
+      if (step.id !== stepId) {
+        return step;
+      }
+
+      return {
+        ...step,
+        ingredients: step.ingredients.filter(
+          (ingredient) => ingredient.id !== ingredientId,
+        ),
+      };
+    }),
+  );
+}
 
   function handleSubmit(e) {
     e.preventDefault();
@@ -271,6 +333,7 @@ export default function RecipeForm({
         onRemoveStep={handleRemoveStep}
         onStepIngredientChange={handleStepIngredientChange}
         onAddStepIngredient={handleAddStepIngredient}
+        onAddLinkedStepIngredient={handleAddLinkedStepIngredient}
         onRemoveStepIngredient={handleRemoveStepIngredient}
       />
 

@@ -45,6 +45,7 @@ export default function StepsEditor({
   onRemoveStep,
   onStepIngredientChange,
   onAddStepIngredient,
+  onAddLinkedStepIngredient,
   onRemoveStepIngredient,
 }) {
   const hasCompletedSteps = steps.some(hasStepContent);
@@ -341,6 +342,12 @@ export default function StepsEditor({
                         }
                           onAddIngredient={() =>
                             onAddStepIngredient(step.id)
+                          }
+                          onAddLinkedIngredient={(recipeIngredient) =>
+                            onAddLinkedStepIngredient(
+                              step.id,
+                              recipeIngredient,
+                            )
                           }
                           onRemoveIngredient={(ingredientId) =>
                             onRemoveStepIngredient(

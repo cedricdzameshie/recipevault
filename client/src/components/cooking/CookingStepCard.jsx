@@ -33,14 +33,32 @@ export default function CookingStepCard({
 
               <ul className="mt-3 space-y-2.5">
                 {step.ingredients.map((ingredient) => {
-                  const ingredientText = [
-                    scaleIngredientQuantity(ingredient.quantity, batchScale),
-                    ingredient.unit,
-                    ingredient.name || ingredient.ingredient,
-                  ]
-                    .filter(Boolean)
-                    .join(" ");
+  const linkedIngredient =
+    ingredient.ingredientId &&
+    typeof ingredient.ingredient === "object"
+      ? ingredient.ingredient
+      : null;
 
+  const resolvedQuantity =
+    ingredient.quantity || linkedIngredient?.quantity || "";
+
+  const resolvedUnit =
+    ingredient.unit || linkedIngredient?.unit || "";
+
+  const resolvedName =
+    linkedIngredient?.name ||
+    ingredient.name ||
+    (typeof ingredient.ingredient === "string"
+      ? ingredient.ingredient
+      : "");
+
+  const ingredientText = [
+    scaleIngredientQuantity(resolvedQuantity, batchScale),
+    resolvedUnit,
+    resolvedName,
+  ]
+    .filter(Boolean)
+    .join(" ");
                   const isChecked = checkedIngredientIds.some(
                     (id) => String(id) === String(ingredient.id)
                   );
