@@ -9,6 +9,7 @@ import RecipeForm from "../components/recipe-form/RecipeForm";
 import { importRecipe } from "../api/import";
 import { createRecipe } from "../api/recipes";
 import { normalizeIngredientUnit } from "../utils/ingredientUnits";
+import { normalizeIngredientQuantity } from "../utils/ingredientQuantity";
 
 function toNullableNumber(value) {
   if (value === "" || value === null || value === undefined) {
@@ -17,6 +18,25 @@ function toNullableNumber(value) {
 
   const parsed = Number(value);
   return Number.isNaN(parsed) ? null : parsed;
+}
+
+function getImportWarnings(recipe) {
+  if (!recipe?.ingredients?.length) {
+    return [];
+  }
+
+  return recipe.ingredients.flatMap((ingredient, index) =>
+    (ingredient.warnings || []).map((warning) => ({
+      id: `${index}-${warning}`,
+      ingredientNumber: index + 1,
+      ingredientName:
+        ingredient.name?.trim() ||
+        ingredient.originalLine?.trim() ||
+        "Unnamed ingredient",
+      originalLine: ingredient.originalLine?.trim() || "",
+      message: warning,
+    })),
+  );
 }
 
 function buildRecipePayload(formValues) {
@@ -37,7 +57,8 @@ function buildRecipePayload(formValues) {
       )
       .map((ingredient) => ({
         name: ingredient.ingredient?.trim() || "",
-        quantity: ingredient.quantity?.trim() || null,
+        quantity:
+         normalizeIngredientQuantity(ingredient.quantity) || null,
         unit: normalizeIngredientUnit(ingredient.unit) || null,
       }))
       .filter((ingredient) => ingredient.name),
@@ -59,6 +80,7 @@ export default function ImportRecipePage() {
   const [isImporting, setIsImporting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
+  const importWarnings = getImportWarnings(importedRecipe);
 
   async function handleImport(e) {
     e.preventDefault();
@@ -169,27 +191,81 @@ export default function ImportRecipePage() {
       ) : null}
 
       {importedRecipe ? (
-        <RecipeForm
-          initialData={{
-            ...importedRecipe,
-            ingredients: importedRecipe.ingredients?.map((item) => ({
-              id: crypto.randomUUID(),
-              quantity: item.quantity || "",
-              unit: normalizeIngredientUnit(item.unit) || "",
-              ingredient: item.name || "",
-            })),
-            steps: importedRecipe.steps?.map((step) => ({
-              id: crypto.randomUUID(),
-              instruction: step.instruction || "",
-              prepNote: "",
-              timerMinutes: "",
-              ingredients: [],
-            })),
-          }}
-          submitLabel={isSaving ? "Saving..." : "Save Imported Recipe"}
-          onSubmitRecipe={handleSaveImportedRecipe}
-        />
-      ) : null}
+  <div className="space-y-6">
+    {importWarnings.length > 0 && (
+      <Card className="border-amber-200 bg-amber-50">
+        <div className="space-y-4">
+          <div>
+            <h2 className="text-lg font-semibold text-stone-900">
+              Review imported measurements
+            </h2>
+
+            <p className="mt-1 text-sm leading-6 text-stone-600">
+              RecipeVault preserved some measurements that may need a
+              quick review before saving.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            {importWarnings.map((warning) => (
+              <div
+                key={warning.id}
+                className="rounded-xl border border-amber-200 bg-white px-4 py-3"
+              >
+                <p className="text-sm font-semibold text-stone-800">
+                  Ingredient {warning.ingredientNumber}:{" "}
+                  {warning.ingredientName}
+                </p>
+
+                {warning.originalLine && (
+                  <p className="mt-1 break-words text-sm text-stone-700">
+                    {warning.originalLine}
+                  </p>
+                )}
+
+                <p className="mt-2 text-sm text-amber-800">
+                  {warning.message}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <p className="text-xs leading-5 text-stone-500">
+            These notices do not prevent saving. Open the matching
+            ingredient below to confirm or adjust it.
+          </p>
+        </div>
+      </Card>
+    )}
+
+    <RecipeForm
+      initialData={{
+        ...importedRecipe,
+
+        ingredients: importedRecipe.ingredients?.map((item) => ({
+          id: crypto.randomUUID(),
+          quantity: normalizeIngredientQuantity(item.quantity),
+          unit: normalizeIngredientUnit(item.unit) || "",
+          ingredient: item.name || "",
+          originalLine: item.originalLine || "",
+          warnings: item.warnings || [],
+        })),
+
+        steps: importedRecipe.steps?.map((step) => ({
+          id: crypto.randomUUID(),
+          instruction: step.instruction || "",
+          prepNote: "",
+          timerMinutes: "",
+          ingredients: [],
+        })),
+      }}
+      submitLabel={
+        isSaving ? "Saving..." : "Save Imported Recipe"
+      }
+      onSubmitRecipe={handleSaveImportedRecipe}
+    />
+  </div>
+) : null}
     </section>
   );
 }
