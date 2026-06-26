@@ -23,6 +23,7 @@ const recipeImportSchema = {
           type: "object",
           additionalProperties: false,
           properties: {
+            tempId: { type: "string" },
             originalLine: { type: "string" },
             name: { type: "string" },
             quantity: { type: ["string", "null"] },
@@ -32,7 +33,14 @@ const recipeImportSchema = {
               items: { type: "string" },
             },
           },
-          required: ["originalLine", "name", "quantity", "unit", "warnings"],
+          required: [
+            "tempId",
+            "originalLine",
+            "name",
+            "quantity",
+            "unit",
+            "warnings",
+          ],
         },
       },
 
@@ -43,8 +51,21 @@ const recipeImportSchema = {
           additionalProperties: false,
           properties: {
             instruction: { type: "string" },
+
+            ingredientRefs: {
+              type: "array",
+              items: {
+                type: "object",
+                additionalProperties: false,
+                properties: {
+                  ingredientTempId: { type: "string" },
+                  confidence: { type: "number" },
+                },
+                required: ["ingredientTempId", "confidence"],
+              },
+            },
           },
-          required: ["instruction"],
+          required: ["instruction", "ingredientRefs"],
         },
       },
     },
@@ -234,6 +255,14 @@ export async function importRecipeFromText(req, res) {
                 "Never use quantity 0 for a normal ingredient unless the source explicitly says zero.",
                 "Steps must be returned as a clean ordered list.",
                 "If a field is missing, use null for numbers and empty string for text.",
+                "Assign every master ingredient a unique temporary ID such as 'ingredient-1', 'ingredient-2', and so on.",
+                "For each cooking step, return ingredientRefs identifying which master ingredients are explicitly or clearly used during that step.",
+                "ingredientTempId must exactly match one of the temporary IDs in the ingredients array.",
+                "Use confidence from 0 to 1 for each suggested ingredient reference.",
+                "Use high confidence for explicit ingredient mentions.",
+                "Use lower confidence for inferred group references such as 'dry ingredients' or 'remaining ingredients'.",
+                "Do not invent ingredients that are not present in the master ingredient list.",
+                "If no ingredients can be confidently associated with a step, return an empty ingredientRefs array.",
               ].join(" "),
             },
           ],

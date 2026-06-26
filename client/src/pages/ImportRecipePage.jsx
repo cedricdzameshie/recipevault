@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PageHeader from "../components/common/PageHeader";
 import Card from "../components/common/Card";
@@ -10,6 +9,7 @@ import { importRecipe } from "../api/import";
 import { createRecipe } from "../api/recipes";
 import { normalizeIngredientUnit } from "../utils/ingredientUnits";
 import { normalizeIngredientQuantity } from "../utils/ingredientQuantity";
+import { useMemo, useState } from "react";
 
 function toNullableNumber(value) {
   if (value === "" || value === null || value === undefined) {
@@ -49,24 +49,114 @@ function buildRecipePayload(formValues) {
     notes: formValues.notes?.trim() || "",
     folderId: formValues.folderId || null,
     ingredients: (formValues.ingredients || [])
+  .filter(
+    (ingredient) =>
+      ingredient.ingredient?.trim() ||
+      ingredient.quantity?.trim() ||
+      ingredient.unit?.trim(),
+  )
+  .map((ingredient, index) => ({
+    id: ingredient.id,
+    name: ingredient.ingredient?.trim() || "",
+    quantity:
+      normalizeIngredientQuantity(ingredient.quantity) || null,
+    unit: normalizeIngredientUnit(ingredient.unit) || null,
+    position: index + 1,
+  }))
+  .filter((ingredient) => ingredient.name),
+    steps: (formValues.steps || [])
+  .filter((step) => step.instruction?.trim())
+  .map((step, stepIndex) => ({
+    id: step.id,
+    instruction: step.instruction.trim(),
+    prepNote: step.prepNote?.trim() || "",
+    timerMinutes: toNullableNumber(step.timerMinutes),
+    position: stepIndex + 1,
+
+    ingredients: (step.ingredients || [])
       .filter(
         (ingredient) =>
-          ingredient.ingredient?.trim() ||
-          ingredient.quantity?.trim() ||
-          ingredient.unit?.trim()
+          ingredient.ingredientId ||
+          ingredient.ingredient?.trim(),
       )
-      .map((ingredient) => ({
+      .map((ingredient, ingredientIndex) => ({
+        id: ingredient.id,
+        ingredientId: ingredient.ingredientId || null,
         name: ingredient.ingredient?.trim() || "",
         quantity:
-         normalizeIngredientQuantity(ingredient.quantity) || null,
-        unit: normalizeIngredientUnit(ingredient.unit) || null,
-      }))
-      .filter((ingredient) => ingredient.name),
-    steps: (formValues.steps || [])
-      .filter((step) => step.instruction?.trim())
-      .map((step) => ({
-        instruction: step.instruction.trim(),
+          normalizeIngredientQuantity(ingredient.quantity) ||
+          null,
+        unit:
+          normalizeIngredientUnit(ingredient.unit) || null,
+        position: ingredientIndex + 1,
       })),
+  })),
+  };
+}
+
+function buildImportedRecipeFormData(importedRecipe) {
+  const ingredientIdMap = new Map();
+
+  const ingredients = (importedRecipe.ingredients || []).map(
+    (item, index) => {
+      const browserId = crypto.randomUUID();
+
+      const sourceTempId =
+        item.tempId || `ingredient-${index + 1}`;
+
+      ingredientIdMap.set(sourceTempId, {
+        id: browserId,
+        name: item.name || "",
+        quantity: normalizeIngredientQuantity(item.quantity),
+        unit: normalizeIngredientUnit(item.unit) || "",
+      });
+
+      return {
+        id: browserId,
+        quantity: normalizeIngredientQuantity(item.quantity),
+        unit: normalizeIngredientUnit(item.unit) || "",
+        ingredient: item.name || "",
+        originalLine: item.originalLine || "",
+        warnings: item.warnings || [],
+      };
+    },
+  );
+
+  const steps = (importedRecipe.steps || []).map((step) => {
+    const linkedIngredients = (step.ingredientRefs || [])
+      .map((reference) => {
+        const matchedIngredient = ingredientIdMap.get(
+          reference.ingredientTempId,
+        );
+
+        if (!matchedIngredient) {
+          return null;
+        }
+
+        return {
+          id: crypto.randomUUID(),
+          ingredientId: matchedIngredient.id,
+          ingredient: matchedIngredient.name,
+          quantity: matchedIngredient.quantity,
+          unit: matchedIngredient.unit,
+          confidence: reference.confidence,
+        };
+      })
+      .filter(Boolean);
+
+    return {
+      id: crypto.randomUUID(),
+      instruction: step.instruction || "",
+      prepNote: "",
+      timerMinutes: "",
+      ingredients: linkedIngredients,
+    };
+  });
+
+  return {
+    ...importedRecipe,
+    ingredients,
+    steps,
   };
 }
 
@@ -80,7 +170,16 @@ export default function ImportRecipePage() {
   const [isImporting, setIsImporting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
+
   const importWarnings = getImportWarnings(importedRecipe);
+
+  const importedFormData = useMemo(() => {
+    if (!importedRecipe) {
+      return null;
+    }
+
+  return buildImportedRecipeFormData(importedRecipe);
+}, [importedRecipe]);
 
   async function handleImport(e) {
     e.preventDefault();
@@ -239,31 +338,12 @@ export default function ImportRecipePage() {
     )}
 
     <RecipeForm
-      initialData={{
-        ...importedRecipe,
-
-        ingredients: importedRecipe.ingredients?.map((item) => ({
-          id: crypto.randomUUID(),
-          quantity: normalizeIngredientQuantity(item.quantity),
-          unit: normalizeIngredientUnit(item.unit) || "",
-          ingredient: item.name || "",
-          originalLine: item.originalLine || "",
-          warnings: item.warnings || [],
-        })),
-
-        steps: importedRecipe.steps?.map((step) => ({
-          id: crypto.randomUUID(),
-          instruction: step.instruction || "",
-          prepNote: "",
-          timerMinutes: "",
-          ingredients: [],
-        })),
-      }}
-      submitLabel={
-        isSaving ? "Saving..." : "Save Imported Recipe"
-      }
-      onSubmitRecipe={handleSaveImportedRecipe}
-    />
+  initialData={importedFormData}
+  submitLabel={
+    isSaving ? "Saving..." : "Save Imported Recipe"
+  }
+  onSubmitRecipe={handleSaveImportedRecipe}
+/>
   </div>
 ) : null}
     </section>

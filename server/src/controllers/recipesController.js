@@ -70,53 +70,89 @@ export async function createRecipe(req, res) {
     } = req.body;
 
     if (!title || !title.trim()) {
-      return res.status(400).json({ error: "Title is required" });
+      return res.status(400).json({
+        error: "Title is required",
+      });
     }
 
-    const newRecipe = await prisma.recipe.create({
-      data: {
-        title: title.trim(),
-        description,
-        servings,
-        prepTime,
-        cookTime,
-        notes,
-        folderId: folderId || null,
-        ingredients: {
-          create: ingredients.map((ingredient, index) => ({
+    const newRecipe = await prisma.$transaction(async (tx) => {
+      const recipe = await tx.recipe.create({
+        data: {
+          title: title.trim(),
+          description,
+          servings,
+          prepTime,
+          cookTime,
+          notes,
+          folderId: folderId || null,
+        },
+      });
+
+      /*
+       * Maps temporary browser ingredient IDs to the real
+       * database ingredient IDs created below.
+       */
+      const ingredientIdMap = new Map();
+
+      for (const [ingredientIndex, ingredient] of ingredients.entries()) {
+        const createdIngredient = await tx.ingredient.create({
+          data: {
+            recipeId: recipe.id,
             name: ingredient.name,
             quantity: ingredient.quantity || null,
             unit: ingredient.unit || null,
-            position: ingredient.position ?? index + 1,
-          })),
-        },
-        steps: {
-          create: steps.map((step, index) => ({
+            position: ingredient.position ?? ingredientIndex + 1,
+          },
+        });
+
+        if (ingredient.id) {
+          ingredientIdMap.set(ingredient.id, createdIngredient.id);
+        }
+      }
+
+      for (const [stepIndex, step] of steps.entries()) {
+        await tx.step.create({
+          data: {
+            recipeId: recipe.id,
             instruction: step.instruction,
             prepNote: step.prepNote || null,
             timerMinutes: step.timerMinutes ?? null,
-            position: step.position ?? index + 1,
+            position: step.position ?? stepIndex + 1,
 
             ingredients: {
               create: (step.ingredients || []).map(
-                (ingredient, ingredientIndex) => ({
-                  name: ingredient.name,
-                  quantity: ingredient.quantity || null,
-                  unit: ingredient.unit || null,
-                  position: ingredient.position ?? ingredientIndex + 1,
-                }),
+                (ingredient, ingredientIndex) => {
+                  const linkedIngredientId = ingredient.ingredientId
+                    ? ingredientIdMap.get(ingredient.ingredientId) || null
+                    : null;
+
+                  return {
+                    name: ingredient.name,
+                    quantity: ingredient.quantity || null,
+                    unit: ingredient.unit || null,
+                    position: ingredient.position ?? ingredientIndex + 1,
+                    ingredientId: linkedIngredientId,
+                  };
+                },
               ),
             },
-          })),
-        },
-      },
-      include: recipeInclude,
+          },
+        });
+      }
+
+      return tx.recipe.findUnique({
+        where: { id: recipe.id },
+        include: recipeInclude,
+      });
     });
 
     res.status(201).json(newRecipe);
   } catch (error) {
     console.error("Error creating recipe:", error);
-    res.status(500).json({ error: "Failed to create recipe" });
+
+    res.status(500).json({
+      error: "Failed to create recipe",
+    });
   }
 }
 
