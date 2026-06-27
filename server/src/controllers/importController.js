@@ -16,20 +16,34 @@ const recipeImportSchema = {
       prepTime: { type: ["integer", "null"] },
       cookTime: { type: ["integer", "null"] },
       notes: { type: "string" },
+
       ingredients: {
         type: "array",
         items: {
           type: "object",
           additionalProperties: false,
           properties: {
+            tempId: { type: "string" },
             originalLine: { type: "string" },
             name: { type: "string" },
             quantity: { type: ["string", "null"] },
             unit: { type: ["string", "null"] },
+            warnings: {
+              type: "array",
+              items: { type: "string" },
+            },
           },
-          required: ["originalLine", "name", "quantity", "unit"],
+          required: [
+            "tempId",
+            "originalLine",
+            "name",
+            "quantity",
+            "unit",
+            "warnings",
+          ],
         },
       },
+
       steps: {
         type: "array",
         items: {
@@ -37,8 +51,21 @@ const recipeImportSchema = {
           additionalProperties: false,
           properties: {
             instruction: { type: "string" },
+
+            ingredientRefs: {
+              type: "array",
+              items: {
+                type: "object",
+                additionalProperties: false,
+                properties: {
+                  ingredientTempId: { type: "string" },
+                  confidence: { type: "number" },
+                },
+                required: ["ingredientTempId", "confidence"],
+              },
+            },
           },
-          required: ["instruction"],
+          required: ["instruction", "ingredientRefs"],
         },
       },
     },
@@ -118,6 +145,67 @@ async function extractTextFromUrl(recipeUrl) {
   return cleaned.slice(0, 30000);
 }
 
+function escapeRegExp(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function hasComplexMeasurement(value) {
+  if (!value) {
+    return false;
+  }
+
+  return value.includes("+") || /\([^)]*\d[^)]*\)/.test(value);
+}
+
+function repairImportedIngredient(ingredient) {
+  const originalLine = ingredient.originalLine?.trim() || "";
+
+  const name = ingredient.name?.trim() || "";
+
+  let quantity = ingredient.quantity?.trim() || null;
+
+  const unit = ingredient.unit?.trim() || null;
+
+  const warnings = Array.isArray(ingredient.warnings)
+    ? [...ingredient.warnings]
+    : [];
+
+  /*
+   * If the AI kept the original line but dropped the measurement,
+   * try to recover the text that appears before the ingredient name.
+   */
+  if (!quantity && originalLine && name) {
+    const nameAtEndPattern = new RegExp(`\\s*${escapeRegExp(name)}\\s*$`, "i");
+
+    const possibleMeasurement = originalLine
+      .replace(nameAtEndPattern, "")
+      .replace(/[,\s]+$/g, "")
+      .trim();
+
+    if (possibleMeasurement && /\d/.test(possibleMeasurement)) {
+      quantity = possibleMeasurement;
+
+      warnings.push("Measurement recovered from the original ingredient text.");
+    }
+  }
+
+  if (
+    hasComplexMeasurement(quantity) &&
+    !warnings.includes("Complex measurement preserved for review.")
+  ) {
+    warnings.push("Complex measurement preserved for review.");
+  }
+
+  return {
+    ...ingredient,
+    originalLine,
+    name,
+    quantity,
+    unit,
+    warnings: [...new Set(warnings)],
+  };
+}
+
 export async function importRecipeFromText(req, res) {
   try {
     const { recipeText, recipeUrl } = req.body;
@@ -126,9 +214,9 @@ export async function importRecipeFromText(req, res) {
       (!recipeText || !recipeText.trim()) &&
       (!recipeUrl || !recipeUrl.trim())
     ) {
-      return res
-        .status(400)
-        .json({ error: "Recipe text or recipe URL is required" });
+      return res.status(400).json({
+        error: "Recipe text or recipe URL is required",
+      });
     }
 
     let sourceText = "";
@@ -152,13 +240,29 @@ export async function importRecipeFromText(req, res) {
                 "Ignore ads, popups, local offers, newsletter prompts, comments, reviews, navigation, and unrelated site text.",
                 "Return only the structured fields requested.",
                 "If the recipe title is not explicit, infer a reasonable title from the ingredients and steps.",
-                "Never drop quantities, package sizes, or measurements that appear in the source text.",
+                "Never drop quantities, package sizes, parenthetical measurements, or alternate measurements that appear in the source text.",
                 "Preserve the full original ingredient text in originalLine.",
-                "If an ingredient has package sizing like '1 (32 ounce) bag', preserve that detail in originalLine and use the clearest possible quantity/unit/name split.",
-                "If quantity and unit cannot be confidently separated, keep the full source ingredient in originalLine and put the clearest ingredient name in name.",
-                "Ingredients must be normalized into originalLine, name, quantity, and unit.",
+                "Ingredients must be normalized into originalLine, name, quantity, unit, and warnings.",
+                "When an ingredient line begins with a measurement, quantity must never be null or empty.",
+                "For simple ingredients, split the quantity, unit, and ingredient name as clearly as possible.",
+                "For complex measurements such as '1 cup + 1 tablespoon (135 g)', preserve the entire measurement portion in quantity and use null for unit.",
+                "For '1 cup + 1 tablespoon (135 g) all-purpose flour', return quantity as '1 cup + 1 tablespoon (135 g)', unit as null, and name as 'all-purpose flour'.",
+                "Do not discard parenthetical metric measurements.",
+                "If an ingredient has package sizing like '1 (32 ounce) bag', preserve that detail in originalLine and use the clearest possible quantity, unit, and name split.",
+                "If quantity and unit cannot be confidently separated, preserve the full measurement text in quantity, use null for unit, and keep the clearest ingredient name in name.",
+                "Add 'Complex measurement preserved for review.' to warnings when an ingredient contains multiple measurements or equivalent measurements.",
+                "Use an empty warnings array when no review is needed.",
+                "Never use quantity 0 for a normal ingredient unless the source explicitly says zero.",
                 "Steps must be returned as a clean ordered list.",
                 "If a field is missing, use null for numbers and empty string for text.",
+                "Assign every master ingredient a unique temporary ID such as 'ingredient-1', 'ingredient-2', and so on.",
+                "For each cooking step, return ingredientRefs identifying which master ingredients are explicitly or clearly used during that step.",
+                "ingredientTempId must exactly match one of the temporary IDs in the ingredients array.",
+                "Use confidence from 0 to 1 for each suggested ingredient reference.",
+                "Use high confidence for explicit ingredient mentions.",
+                "Use lower confidence for inferred group references such as 'dry ingredients' or 'remaining ingredients'.",
+                "Do not invent ingredients that are not present in the master ingredient list.",
+                "If no ingredients can be confidently associated with a step, return an empty ingredientRefs array.",
               ].join(" "),
             },
           ],
@@ -184,7 +288,13 @@ export async function importRecipeFromText(req, res) {
     });
 
     const parsed = JSON.parse(response.output_text);
-    return res.json(parsed);
+
+    const repairedRecipe = {
+      ...parsed,
+      ingredients: (parsed.ingredients || []).map(repairImportedIngredient),
+    };
+
+    return res.json(repairedRecipe);
   } catch (error) {
     console.error("Error importing recipe:", error);
 
@@ -192,6 +302,13 @@ export async function importRecipeFromText(req, res) {
       return res.status(429).json({
         error:
           "AI import is unavailable because the OpenAI API quota is exhausted. Check billing or API credits.",
+      });
+    }
+
+    if (error?.code === "invalid_api_key") {
+      return res.status(401).json({
+        error:
+          "AI import could not authenticate with the OpenAI API. Check the server API key.",
       });
     }
 

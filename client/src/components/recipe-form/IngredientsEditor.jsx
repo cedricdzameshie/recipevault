@@ -4,7 +4,6 @@ import Button from "../common/Button";
 import Input from "../common/Input";
 import { INGREDIENT_UNIT_OPTIONS } from "../../utils/ingredientUnits";
 
-
 function hasIngredientContent(ingredient) {
   return Boolean(
     ingredient.ingredient?.trim() ||
@@ -20,7 +19,7 @@ function createIngredientLabel(ingredient) {
     ingredient.ingredient?.trim(),
   ].filter(Boolean);
 
-  return parts.join(" ") || "Unnamed ingredient";
+  return parts.join(" ") || "New ingredient — add details";
 }
 
 export default function IngredientsEditor({
@@ -30,18 +29,69 @@ export default function IngredientsEditor({
   onRemoveIngredient,
 }) {
   const completedIngredients = ingredients.filter(hasIngredientContent);
+  const hasCompletedIngredients = completedIngredients.length > 0;
 
-  const [isExpanded, setIsExpanded] = useState(
-    completedIngredients.length === 0,
+  const [isSectionExpanded, setIsSectionExpanded] = useState(
+    !hasCompletedIngredients,
   );
 
+ const [expandedIngredientId, setExpandedIngredientId] = useState(null);
+
+  const activeExpandedIngredientId = ingredients.some(
+    (ingredient) => ingredient.id === expandedIngredientId,
+  )
+    ? expandedIngredientId
+    : null;
+
   const visibleIngredientChips = completedIngredients.slice(0, 5);
+
   const remainingIngredientCount =
     completedIngredients.length - visibleIngredientChips.length;
 
-  function handleAddIngredient() {
-    onAddIngredient();
-    setIsExpanded(true);
+  function handleOpenSection() {
+  setIsSectionExpanded(true);
+  setExpandedIngredientId(null);
+}
+
+function handleCloseSection() {
+  setExpandedIngredientId(null);
+  setIsSectionExpanded(false);
+}
+
+function handleAddIngredient() {
+  const newIngredientId = onAddIngredient();
+
+  setIsSectionExpanded(true);
+
+  if (newIngredientId) {
+    setExpandedIngredientId(newIngredientId);
+  }
+}
+
+  function handleRemoveIngredient(ingredientId) {
+    const removedIngredientIndex = ingredients.findIndex(
+      (ingredient) => ingredient.id === ingredientId,
+    );
+
+    const wasExpanded =
+      activeExpandedIngredientId === ingredientId;
+
+    onRemoveIngredient(ingredientId);
+
+    if (!wasExpanded) {
+      return;
+    }
+
+    const remainingIngredients = ingredients.filter(
+      (ingredient) => ingredient.id !== ingredientId,
+    );
+
+    const nextIngredient =
+      remainingIngredients[removedIngredientIndex] ||
+      remainingIngredients[removedIngredientIndex - 1] ||
+      remainingIngredients[0];
+
+    setExpandedIngredientId(nextIngredient?.id || null);
   }
 
   return (
@@ -51,7 +101,7 @@ export default function IngredientsEditor({
           <div className="min-w-0">
             <h2 className="text-xl font-semibold">Ingredients</h2>
 
-            {!isExpanded && (
+            {!isSectionExpanded && (
               <div className="mt-3 space-y-3">
                 <p className="text-sm text-stone-500">
                   {completedIngredients.length === 1
@@ -85,19 +135,29 @@ export default function IngredientsEditor({
             )}
           </div>
 
-          {!isExpanded && (
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => setIsExpanded(true)}
-              aria-expanded={isExpanded}
-            >
-              Edit Ingredients
-            </Button>
+          {!isSectionExpanded && (
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={handleAddIngredient}
+              >
+                Add Ingredient
+              </Button>
+
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={handleOpenSection}
+                aria-expanded={isSectionExpanded}
+              >
+                Edit Ingredients
+              </Button>
+            </div>
           )}
         </div>
 
-        {isExpanded && (
+        {isSectionExpanded && (
           <div className="space-y-4 border-t border-stone-200 pt-4">
             <div className="flex justify-end">
               <Button
@@ -109,81 +169,144 @@ export default function IngredientsEditor({
               </Button>
             </div>
 
-            <div className="space-y-4">
-              {ingredients.map((ingredient, index) => (
-                <div
-                  key={ingredient.id}
-                  className="rounded-2xl border border-stone-200 p-4"
-                >
-                  <div className="mb-3 flex items-center justify-between gap-3">
-                    <h3 className="text-sm font-medium text-stone-700">
-                      Ingredient {index + 1}
-                    </h3>
+            <div className="space-y-3">
+              {ingredients.map((ingredient, index) => {
+                const isExpanded =
+                  activeExpandedIngredientId === ingredient.id;
 
-                    <button
-                      type="button"
-                      onClick={() => onRemoveIngredient(ingredient.id)}
-                      className="text-sm text-stone-600 transition hover:text-stone-900"
-                    >
-                      Remove
-                    </button>
-                  </div>
+                const ingredientLabel =
+                  createIngredientLabel(ingredient);
 
-                  <div className="grid gap-3 md:grid-cols-[120px_140px_1fr]">
-                    <Input
-                      label="Quantity"
-                      name="quantity"
-                      value={ingredient.quantity}
-                      onChange={(event) =>
-                        onIngredientChange(
-                          ingredient.id,
-                          "quantity",
-                          event.target.value,
-                        )
-                      }
-                      placeholder="2"
-                    />
-
-                    <label className="block space-y-2">
-                      <span className="text-sm font-medium text-stone-700">
-                        Unit
-                      </span>
-
-                      <select
-                        value={ingredient.unit}
-                        onChange={(event) =>
-                          onIngredientChange(
-                            ingredient.id,
-                            "unit",
-                            event.target.value,
+                return (
+                  <div
+                    key={ingredient.id}
+                    className={`rounded-2xl border transition ${
+                      isExpanded
+                        ? "border-purple-200 bg-white shadow-sm"
+                        : "border-stone-200 bg-stone-50"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-3 p-4">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setExpandedIngredientId(
+                            isExpanded ? null : ingredient.id,
                           )
                         }
-                        className="w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-base outline-none transition focus:border-stone-500 sm:text-sm"
+                        className="min-w-0 flex-1 text-left"
+                        aria-expanded={isExpanded}
                       >
-                        {INGREDIENT_UNIT_OPTIONS.map((unit) => (
-                          <option key={unit || "blank"} value={unit}>
-                            {unit || "No unit"}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
+                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-purple-700">
+                          Ingredient {index + 1}
+                        </p>
 
-                    <Input
-                      label="Ingredient"
-                      name="ingredient"
-                      value={ingredient.ingredient}
-                      onChange={(event) =>
-                        onIngredientChange(
-                          ingredient.id,
-                          "ingredient",
-                          event.target.value,
-                        )
-                      }
-                      placeholder="Flour"
-                    />
+                        {!isExpanded && (
+                          <p className="mt-2 break-words text-sm leading-6 text-stone-700">
+                            {ingredientLabel}
+                          </p>
+                        )}
+                      </button>
+
+                      <div className="flex shrink-0 items-center gap-3">
+                        {!isExpanded && (
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            onClick={() =>
+                              setExpandedIngredientId(ingredient.id)
+                            }
+                          >
+                            Edit
+                          </Button>
+                        )}
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleRemoveIngredient(ingredient.id)
+                          }
+                          className="text-sm text-stone-500 transition hover:text-red-600"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+
+                    {isExpanded && (
+                      <div className="space-y-4 border-t border-stone-200 p-4">
+                        <div className="grid gap-3 md:grid-cols-[120px_140px_1fr]">
+                          <Input
+                            label="Quantity"
+                            name="quantity"
+                            value={ingredient.quantity}
+                            onChange={(event) =>
+                              onIngredientChange(
+                                ingredient.id,
+                                "quantity",
+                                event.target.value,
+                              )
+                            }
+                            placeholder="2"
+                          />
+
+                          <label className="block space-y-2">
+                            <span className="text-sm font-medium text-stone-700">
+                              Unit
+                            </span>
+
+                            <select
+                              value={ingredient.unit}
+                              onChange={(event) =>
+                                onIngredientChange(
+                                  ingredient.id,
+                                  "unit",
+                                  event.target.value,
+                                )
+                              }
+                              className="w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-base text-stone-900 outline-none transition hover:border-stone-400 focus:border-purple-700 focus:ring-2 focus:ring-purple-100 sm:text-sm"
+                            >
+                              {INGREDIENT_UNIT_OPTIONS.map((unit) => (
+                                <option
+                                  key={unit || "blank"}
+                                  value={unit}
+                                >
+                                  {unit || "No unit"}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+
+                          <Input
+                            label="Ingredient"
+                            name="ingredient"
+                            value={ingredient.ingredient}
+                            onChange={(event) =>
+                              onIngredientChange(
+                                ingredient.id,
+                                "ingredient",
+                                event.target.value,
+                              )
+                            }
+                            placeholder="Flour"
+                          />
+                        </div>
+
+                        <div className="flex justify-end border-t border-stone-200 pt-4">
+                          <Button
+                            type="button"
+                            onClick={() =>
+                              setExpandedIngredientId(null)
+                            }
+                          >
+                            Done Editing Ingredient
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <div className="flex flex-col gap-3 border-t border-stone-200 pt-4 sm:flex-row sm:justify-between">
@@ -195,10 +318,7 @@ export default function IngredientsEditor({
                 + Add Another Ingredient
               </Button>
 
-              <Button
-                type="button"
-                onClick={() => setIsExpanded(false)}
-              >
+              <Button type="button" onClick={handleCloseSection}>
                 Done
               </Button>
             </div>
