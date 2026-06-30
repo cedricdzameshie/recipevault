@@ -1,28 +1,31 @@
-import { Link } from "react-router-dom";
+import QuickActionCard from "./QuickActionCard";
 
 export default function DashboardQuickActions() {
   return (
-    <section className="grid gap-3 sm:grid-cols-3">
-      <Link
+    <section className="grid gap-4 md:grid-cols-3">
+      <QuickActionCard
+        title="Add Recipe"
+        description="Create a recipe manually."
         to="/recipes/new"
-        className="inline-flex items-center justify-center rounded-2xl bg-green-700 px-4 py-4 text-sm font-medium text-white transition hover:bg-green-800"
-      >
-        Add Recipe
-      </Link>
+        icon="+"
+        variant="primary"
+      />
 
-      <button
-        type="button"
-        className="inline-flex items-center justify-center rounded-2xl border border-stone-200 bg-white px-4 py-4 text-sm font-medium text-stone-900 transition hover:bg-stone-100"
-      >
-        Import Recipe
-      </button>
+      <QuickActionCard
+        title="Import Recipe"
+        description="Paste recipe text or a recipe URL."
+        to="/recipes/import"
+        icon="✦"
+        variant="accent"
+      />
 
-      <Link
+      <QuickActionCard
+        title="Browse Recipes"
+        description="View your saved recipe collection."
         to="/recipes"
-        className="inline-flex items-center justify-center rounded-2xl border border-stone-200 bg-white px-4 py-4 text-sm font-medium text-stone-900 transition hover:bg-stone-100"
-      >
-        Browse Recipes
-      </Link>
+        icon="⌕"
+        variant="secondary"
+      />
     </section>
   );
 }
