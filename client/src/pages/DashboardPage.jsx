@@ -1,17 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import DashboardWelcome from "../components/dashboard/DashboardWelcome";
-import DashboardRecipePreview from "../components/dashboard/DashboardRecipePreview";
 import DashboardContinueCooking from "../components/dashboard/DashboardContinueCooking";
 import DashboardReminders from "../components/dashboard/DashboardReminders";
 import { fetchRecipes } from "../api/recipes";
 import { fetchReminders } from "../api/reminders";
+import DashboardDiscover from "../components/dashboard/DashboardDiscover";
 
 export default function DashboardPage() {
   const [recipes, setRecipes] = useState([]);
   const [reminders, setReminders] = useState([]);
   const [isLoadingRecipes, setIsLoadingRecipes] = useState(true);
   const [isLoadingReminders, setIsLoadingReminders] = useState(true);
-  const [recipesError, setRecipesError] = useState("");
   const [remindersError, setRemindersError] = useState("");
   const [continueCookingSession, setContinueCookingSession] =
     useState(null);
@@ -42,7 +41,6 @@ export default function DashboardPage() {
     async function loadRecipes() {
       try {
         setIsLoadingRecipes(true);
-        setRecipesError("");
 
         const data = await fetchRecipes();
 
@@ -57,9 +55,6 @@ export default function DashboardPage() {
 
         if (isMounted) {
           setRecipes([]);
-          setRecipesError(
-            error.message || "Failed to load recipes",
-          );
         }
       } finally {
         if (isMounted) {
@@ -105,16 +100,6 @@ export default function DashboardPage() {
     };
   }, []);
 
-  const recentRecipes = useMemo(() => {
-    return [...recipes]
-      .sort(
-        (a, b) =>
-          new Date(b.updatedAt || b.createdAt || 0) -
-          new Date(a.updatedAt || a.createdAt || 0),
-      )
-      .slice(0, 3);
-  }, [recipes]);
-
   const activeReminders = useMemo(() => {
     return reminders.filter(
       (reminder) => !reminder.complete,
@@ -146,7 +131,12 @@ export default function DashboardPage() {
       {continueCookingRecipe ? (
         <DashboardContinueCooking
           recipe={continueCookingRecipe}
-          currentStep={continueCookingSession?.step || 1}
+          currentStep={
+            continueCookingSession?.currentStep ??
+            continueCookingSession?.currentStep ??
+            continueCookingSession?.step ??
+              1
+            }
           isLoading={isLoadingRecipes}
           onDismiss={handleDismissContinueCooking}
         />
@@ -158,11 +148,8 @@ export default function DashboardPage() {
         error={remindersError}
       />
 
-      <DashboardRecipePreview
-        recipes={recentRecipes}
-        isLoading={isLoadingRecipes}
-        error={recipesError}
-      />
+      <DashboardDiscover /> 
+
     </section>
   );
 }

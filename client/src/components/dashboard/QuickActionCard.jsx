@@ -22,33 +22,33 @@ export default function QuickActionCard({
     <Link
       to={to}
       className={[
-        "group flex min-h-24 items-start justify-between gap-4 rounded-2xl border p-4",
-        "transition duration-200 hover:-translate-y-0.5 hover:shadow-md",
+        "group flex items-center gap-3 rounded-xl border px-3 py-3",
+        "transition duration-200 hover:-translate-y-0.5 hover:shadow-sm",
         "focus:outline-none focus-visible:ring-2 focus-visible:ring-rv-plum",
-        "sm:min-h-28 sm:p-5",
+        "sm:px-4 sm:py-3.5",
         variantClasses[variant] || variantClasses.secondary,
       ]
         .filter(Boolean)
         .join(" ")}
     >
-      <div className="space-y-1.5">
-        <h3 className="text-base font-semibold sm:text-lg">
-          {title}
-        </h3>
-
-        <p className="text-sm leading-5 opacity-80">
-          {description}
-        </p>
-      </div>
-
       {icon ? (
         <span
           aria-hidden="true"
-          className="shrink-0 text-xl transition-transform group-hover:scale-110 sm:text-2xl"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/20 text-lg font-semibold"
         >
           {icon}
         </span>
       ) : null}
+
+      <div className="min-w-0">
+        <h3 className="text-sm font-semibold leading-5 sm:text-base">
+          {title}
+        </h3>
+
+        <p className="truncate text-xs opacity-75 sm:text-sm">
+          {description}
+        </p>
+      </div>
     </Link>
   );
 }
