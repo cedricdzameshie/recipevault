@@ -11,60 +11,61 @@ export default function DashboardReminders({
 
   return (
     <Card className="border-stone-300/70 bg-white/95">
-      <div className="space-y-5">
-        <div className="flex items-start justify-between gap-4">
+      <div className="space-y-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-1">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-rv-plum/65">
-              Reminders
+              Today
             </p>
+
             <h2 className="text-2xl font-semibold tracking-tight text-rv-plum">
-              Stay on top of things
+              What needs your attention
             </h2>
           </div>
 
-          <Link to="/reminders">
-            <Button variant="secondary">Manage</Button>
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <Link to="/reminders">
+              <Button variant="primary" size="sm">
+                Add Reminder
+              </Button>
+            </Link>
+
+            <Link to="/reminders">
+              <Button variant="secondary" size="sm">
+                View All
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {isLoading ? (
-          <p className="text-sm text-stone-600">Loading reminders...</p>
+          <p className="text-sm text-stone-600">
+            Loading reminders...
+          </p>
         ) : error ? (
-          <p className="text-sm text-rv-coral">{error}</p>
+          <p className="text-sm text-rv-coral">
+            {error}
+          </p>
         ) : previewReminders.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-stone-300 bg-rv-cream/50 px-4 py-4">
-            <p className="text-sm text-stone-600">No reminders right now.</p>
-          </div>
+          <p className="text-sm text-stone-600">
+            Nothing needs your attention right now.
+          </p>
         ) : (
-          <ul className="space-y-3">
+          <ul className="divide-y divide-stone-200">
             {previewReminders.map((reminder) => (
               <li
                 key={reminder.id}
-                className="rounded-2xl border border-stone-200 bg-rv-cream/45 px-4 py-4"
+                className="flex items-start justify-between gap-4 py-3 first:pt-0 last:pb-0"
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p
-                      className={`text-sm font-medium ${
-                        reminder.complete
-                          ? "text-stone-500 line-through"
-                          : "text-rv-plum"
-                      }`}
-                    >
-                      {reminder.title}
+                <div>
+                  <p className="text-sm font-medium text-rv-plum">
+                    {reminder.title}
+                  </p>
+
+                  {reminder.detail ? (
+                    <p className="mt-1 text-xs leading-5 text-stone-600">
+                      {reminder.detail}
                     </p>
-
-                    {reminder.detail ? (
-                      <p className="mt-1 text-xs text-stone-600">
-                        {reminder.detail}
-                      </p>
-                    ) : null}
-                  </div>
-
-                  {reminder.complete ? (
-                    <span className="rounded-full border border-rv-teal/30 bg-rv-teal/20 px-3 py-1 text-xs font-medium text-rv-plum">
-                      Complete
-                    </span>
                   ) : null}
                 </div>
               </li>

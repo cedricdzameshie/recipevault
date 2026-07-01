@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
 import Card from "../common/Card";
-import Button from "../common/Button";
 import DashboardSection from "./DashboardSection";
 
 export default function DashboardRecipePreview({
@@ -9,16 +8,21 @@ export default function DashboardRecipePreview({
   error = "",
 }) {
   return (
-    <DashboardSection title="Recent Recipes">
+    <DashboardSection title="Recently Used">
       <div className="flex justify-end">
-        <Link to="/recipes">
-          <Button variant="secondary">View All</Button>
+        <Link
+          to="/recipes"
+          className="text-sm font-semibold text-rv-plum transition hover:text-rv-plum/75"
+        >
+          Browse all recipes
         </Link>
       </div>
 
       {isLoading ? (
         <Card className="border-stone-300/70 bg-white/95">
-          <p className="text-sm text-stone-600">Loading recent recipes...</p>
+          <p className="text-sm text-stone-600">
+            Loading recently used recipes...
+          </p>
         </Card>
       ) : error ? (
         <Card className="border-stone-300/70 bg-white/95">
@@ -40,36 +44,28 @@ export default function DashboardRecipePreview({
             >
               <Card className="border-stone-300/70 bg-white/95 hover:border-rv-teal/40">
                 <div className="space-y-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <h3 className="text-lg font-semibold text-rv-plum">
-                      {recipe.title}
-                    </h3>
-
-                    {recipe.isFavorite ? (
-                      <span className="rounded-full border border-rv-teal/30 bg-rv-teal/20 px-3 py-1 text-xs font-medium text-rv-plum">
-                        Favorite
-                      </span>
-                    ) : null}
-                  </div>
+                  <h3 className="text-lg font-semibold text-rv-plum">
+                    {recipe.title}
+                  </h3>
 
                   {recipe.description ? (
-                    <p className="text-sm text-stone-600 line-clamp-2">
+                    <p className="line-clamp-2 text-sm text-stone-600">
                       {recipe.description}
                     </p>
-                  ) : (
-                    <p className="text-sm text-stone-500">
-                      No description yet.
-                    </p>
-                  )}
+                  ) : null}
 
                   <div className="flex flex-wrap gap-3 text-xs text-stone-500">
-                    <span>Servings: {recipe.servings ?? "—"}</span>
-                    <span>
-                      Prep: {recipe.prepTime ? `${recipe.prepTime} min` : "—"}
-                    </span>
-                    <span>
-                      Cook: {recipe.cookTime ? `${recipe.cookTime} min` : "—"}
-                    </span>
+                    {recipe.servings ? (
+                      <span>{recipe.servings} servings</span>
+                    ) : null}
+
+                    {recipe.prepTime ? (
+                      <span>{recipe.prepTime} min prep</span>
+                    ) : null}
+
+                    {recipe.cookTime ? (
+                      <span>{recipe.cookTime} min cook</span>
+                    ) : null}
                   </div>
                 </div>
               </Card>

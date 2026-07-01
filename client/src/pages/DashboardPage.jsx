@@ -1,9 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import DashboardWelcome from "../components/dashboard/DashboardWelcome";
-import DashboardQuickActions from "../components/dashboard/DashboardQuickActions";
 import DashboardRecipePreview from "../components/dashboard/DashboardRecipePreview";
 import DashboardContinueCooking from "../components/dashboard/DashboardContinueCooking";
-import DashboardFolders from "../components/dashboard/DashboardFolders";
 import DashboardReminders from "../components/dashboard/DashboardReminders";
 import { fetchRecipes } from "../api/recipes";
 import { fetchReminders } from "../api/reminders";
@@ -15,19 +13,26 @@ export default function DashboardPage() {
   const [isLoadingReminders, setIsLoadingReminders] = useState(true);
   const [recipesError, setRecipesError] = useState("");
   const [remindersError, setRemindersError] = useState("");
-  const [continueCookingSession, setContinueCookingSession] = useState(null);
+  const [continueCookingSession, setContinueCookingSession] =
+    useState(null);
 
   useEffect(() => {
     const storedSession = localStorage.getItem("continueCooking");
 
-    if (storedSession) {
-      try {
-        const parsed = JSON.parse(storedSession);
-        setContinueCookingSession(parsed);
-      } catch (error) {
-        console.error("Failed to parse continue cooking session:", error);
-        localStorage.removeItem("continueCooking");
-      }
+    if (!storedSession) {
+      return;
+    }
+
+    try {
+      const parsedSession = JSON.parse(storedSession);
+      setContinueCookingSession(parsedSession);
+    } catch (error) {
+      console.error(
+        "Failed to parse continue cooking session:",
+        error,
+      );
+
+      localStorage.removeItem("continueCooking");
     }
   }, []);
 
@@ -42,13 +47,19 @@ export default function DashboardPage() {
         const data = await fetchRecipes();
 
         if (isMounted) {
-          setRecipes(data);
+          setRecipes(Array.isArray(data) ? data : []);
         }
-      } catch (err) {
-        console.error("Failed to load dashboard recipes:", err);
+      } catch (error) {
+        console.error(
+          "Failed to load dashboard recipes:",
+          error,
+        );
 
         if (isMounted) {
-          setRecipesError(err.message || "Failed to load recipes");
+          setRecipes([]);
+          setRecipesError(
+            error.message || "Failed to load recipes",
+          );
         }
       } finally {
         if (isMounted) {
@@ -65,13 +76,19 @@ export default function DashboardPage() {
         const data = await fetchReminders();
 
         if (isMounted) {
-          setReminders(data);
+          setReminders(Array.isArray(data) ? data : []);
         }
-      } catch (err) {
-        console.error("Failed to load dashboard reminders:", err);
+      } catch (error) {
+        console.error(
+          "Failed to load dashboard reminders:",
+          error,
+        );
 
         if (isMounted) {
-          setRemindersError(err.message || "Failed to load reminders");
+          setReminders([]);
+          setRemindersError(
+            error.message || "Failed to load reminders",
+          );
         }
       } finally {
         if (isMounted) {
@@ -92,20 +109,30 @@ export default function DashboardPage() {
     return [...recipes]
       .sort(
         (a, b) =>
-          new Date(b.updatedAt || b.createdAt) -
-          new Date(a.updatedAt || a.createdAt)
+          new Date(b.updatedAt || b.createdAt || 0) -
+          new Date(a.updatedAt || a.createdAt || 0),
       )
       .slice(0, 3);
   }, [recipes]);
 
-  const continueCookingRecipe =
-    continueCookingSession && recipes.length > 0
-      ? recipes.find(
-          (recipe) => recipe.id === continueCookingSession.recipeId
-        ) || null
-      : null;
+  const activeReminders = useMemo(() => {
+    return reminders.filter(
+      (reminder) => !reminder.complete,
+    );
+  }, [reminders]);
 
-  const activeReminders = reminders.filter((reminder) => !reminder.complete);
+  const continueCookingRecipe = useMemo(() => {
+    if (!continueCookingSession || recipes.length === 0) {
+      return null;
+    }
+
+    return (
+      recipes.find(
+        (recipe) =>
+          recipe.id === continueCookingSession.recipeId,
+      ) || null
+    );
+  }, [continueCookingSession, recipes]);
 
   function handleDismissContinueCooking() {
     localStorage.removeItem("continueCooking");
@@ -115,27 +142,26 @@ export default function DashboardPage() {
   return (
     <section className="space-y-6">
       <DashboardWelcome />
-      
 
-      <DashboardRecipePreview
-        recipes={recentRecipes}
-        isLoading={isLoadingRecipes}
-        error={recipesError}
-      />
-
-      <DashboardContinueCooking
-        recipe={continueCookingRecipe}
-        currentStep={continueCookingSession?.step || 1}
-        isLoading={isLoadingRecipes}
-        onDismiss={handleDismissContinueCooking}
-      />
-
-      <DashboardFolders />
+      {continueCookingRecipe ? (
+        <DashboardContinueCooking
+          recipe={continueCookingRecipe}
+          currentStep={continueCookingSession?.step || 1}
+          isLoading={isLoadingRecipes}
+          onDismiss={handleDismissContinueCooking}
+        />
+      ) : null}
 
       <DashboardReminders
         reminders={activeReminders}
         isLoading={isLoadingReminders}
         error={remindersError}
+      />
+
+      <DashboardRecipePreview
+        recipes={recentRecipes}
+        isLoading={isLoadingRecipes}
+        error={recipesError}
       />
     </section>
   );
