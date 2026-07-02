@@ -21,6 +21,15 @@ const variantClasses = {
 
   neutral:
     "border-stone-200 bg-white text-rv-plum hover:bg-stone-50",
+
+  softCoral:
+    "border-rv-coral/30 bg-rv-coral/10 text-rv-plum hover:bg-rv-coral/15",
+
+  softSage:
+    "border-emerald-200 bg-emerald-50 text-rv-plum hover:bg-emerald-100",  
+
+   softBlue:
+  "border-sky-200 bg-sky-50 text-rv-plum hover:bg-sky-100", 
 };
 
 const sizeClasses = {
@@ -28,12 +37,45 @@ const sizeClasses = {
     "min-h-[72px] items-center gap-3 px-3 py-3 sm:px-4 sm:py-3.5",
 
   compact:
-    "min-h-[88px] items-start gap-2.5 px-3 py-3",
+    "relative min-h-[100px] items-center gap-3 px-3 py-3",
 };
 
 const iconSizeClasses = {
   standard: "h-9 w-9 text-lg",
   compact: "h-9 w-9 text-base",
+};
+
+const iconVariantClasses = {
+  primary:
+    "bg-white/20 text-white",
+
+  accent:
+    "bg-white/25 text-rv-plum",
+
+  secondary:
+    "bg-white/45 text-rv-plum",
+
+  softPlum:
+    "border border-rv-plum/10 bg-white/65 text-rv-plum",
+
+  softTeal:
+    "border border-rv-teal/20 bg-white/60 text-rv-plum",
+
+  softWarm:
+    "border border-amber-200/80 bg-white/65 text-rv-plum",
+
+  neutral:
+    "border border-stone-200 bg-stone-50 text-rv-plum",
+
+  softCoral:
+    "border border-rv-coral/20 bg-white/70 text-rv-plum",
+
+  softSage:
+    "border border-emerald-200 bg-white/70 text-rv-plum",  
+
+  softBlue:
+  "border border-sky-200 bg-white/70 text-rv-plum",  
+    
 };
 
 export default function QuickActionCard({
@@ -46,6 +88,8 @@ export default function QuickActionCard({
   badge,
   className = "",
 }) {
+  const isCompact = size === "compact";
+
   const cardClasses = [
     "group flex w-full rounded-xl border",
     sizeClasses[size] || sizeClasses.standard,
@@ -65,39 +109,68 @@ export default function QuickActionCard({
     .filter(Boolean)
     .join(" ");
 
+  const badgeElement = badge ? (
+    <span className="w-fit rounded-full border border-current/15 bg-white/80 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide shadow-sm">
+      {badge}
+    </span>
+  ) : null;
+
   const content = (
     <>
       {icon ? (
         <span
           aria-hidden="true"
           className={[
-            "flex shrink-0 items-center justify-center",
-            "rounded-lg bg-white/25 font-semibold",
+            "flex shrink-0 items-center justify-center rounded-lg font-semibold",
             iconSizeClasses[size] || iconSizeClasses.standard,
-          ].join(" ")}
+            iconVariantClasses[variant] ||
+              iconVariantClasses.secondary,
+          ]
+            .filter(Boolean)
+            .join(" ")}
         >
           {icon}
         </span>
       ) : null}
 
-      <div className="min-w-0 flex-1">
-        <div className="flex items-start justify-between gap-2">
-          <h3 className="text-sm font-semibold leading-5 sm:text-base">
-            {title}
-          </h3>
+      <div className="flex min-w-0 flex-1 flex-col">
+        {isCompact ? (
+          <>
+            <div className={badge ? "pb-7 pr-1" : ""}>
+              <h3 className="text-[15px] font-semibold leading-5 sm:text-base">
+                {title}
+              </h3>
 
-          {badge ? (
-            <span className="shrink-0 rounded-lg border border-current/15 bg-white/70 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide">
-              {badge}
-            </span>
-          ) : null}
-        </div>
+              {description ? (
+                <p className="mt-1 text-xs leading-[1.35] opacity-75 sm:text-sm">
+                  {description}
+                </p>
+              ) : null}
+            </div>
 
-        {description ? (
-          <p className="mt-0.5 text-xs leading-4 opacity-75 sm:text-sm sm:leading-5">
-            {description}
-          </p>
-        ) : null}
+            {badge ? (
+              <div className="absolute bottom-3 right-3">
+                {badgeElement}
+              </div>
+            ) : null}
+          </>
+        ) : (
+          <>
+            <div className="flex items-start justify-between gap-2">
+              <h3 className="text-sm font-semibold leading-5 sm:text-base">
+                {title}
+              </h3>
+
+              {badgeElement}
+            </div>
+
+            {description ? (
+              <p className="mt-0.5 text-xs leading-4 opacity-75 sm:text-sm sm:leading-5">
+                {description}
+              </p>
+            ) : null}
+          </>
+        )}
       </div>
     </>
   );

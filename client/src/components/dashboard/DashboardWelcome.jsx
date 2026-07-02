@@ -1,7 +1,9 @@
 import Card from "../common/Card";
 import DashboardQuickActions from "./DashboardQuickActions";
 
-export default function DashboardWelcome() {
+export default function DashboardWelcome({
+  reminderCount = 0,
+}) {
   const dailyQuote = {
     text: "Good things rise with time.",
     category: "Kitchen Note",
@@ -26,7 +28,9 @@ export default function DashboardWelcome() {
           </div>
         </div>
 
-        <DashboardQuickActions />
+        <DashboardQuickActions
+          reminderCount={reminderCount}
+        />
       </div>
     </Card>
   );

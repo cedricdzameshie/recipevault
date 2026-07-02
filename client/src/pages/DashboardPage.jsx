@@ -1,17 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import DashboardWelcome from "../components/dashboard/DashboardWelcome";
 import DashboardContinueCooking from "../components/dashboard/DashboardContinueCooking";
-import DashboardReminders from "../components/dashboard/DashboardReminders";
 import { fetchRecipes } from "../api/recipes";
 import { fetchReminders } from "../api/reminders";
-import DashboardDiscover from "../components/dashboard/DashboardDiscover";
 
 export default function DashboardPage() {
   const [recipes, setRecipes] = useState([]);
   const [reminders, setReminders] = useState([]);
   const [isLoadingRecipes, setIsLoadingRecipes] = useState(true);
-  const [isLoadingReminders, setIsLoadingReminders] = useState(true);
-  const [remindersError, setRemindersError] = useState("");
   const [continueCookingSession, setContinueCookingSession] =
     useState(null);
 
@@ -65,9 +61,6 @@ export default function DashboardPage() {
 
     async function loadReminders() {
       try {
-        setIsLoadingReminders(true);
-        setRemindersError("");
-
         const data = await fetchReminders();
 
         if (isMounted) {
@@ -81,13 +74,6 @@ export default function DashboardPage() {
 
         if (isMounted) {
           setReminders([]);
-          setRemindersError(
-            error.message || "Failed to load reminders",
-          );
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoadingReminders(false);
         }
       }
     }
@@ -126,30 +112,22 @@ export default function DashboardPage() {
 
   return (
     <section className="space-y-6">
-      <DashboardWelcome />
+      <DashboardWelcome
+        reminderCount={activeReminders.length}
+      />
 
       {continueCookingRecipe ? (
         <DashboardContinueCooking
           recipe={continueCookingRecipe}
           currentStep={
             continueCookingSession?.currentStep ??
-            continueCookingSession?.currentStep ??
             continueCookingSession?.step ??
-              1
-            }
+            1
+          }
           isLoading={isLoadingRecipes}
           onDismiss={handleDismissContinueCooking}
         />
       ) : null}
-
-      <DashboardReminders
-        reminders={activeReminders}
-        isLoading={isLoadingReminders}
-        error={remindersError}
-      />
-
-      <DashboardDiscover /> 
-
     </section>
   );
 }

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import PageHeader from "../components/common/PageHeader";
 import RecipeGrid from "../components/recipes/RecipeGrid";
 import { fetchRecipes } from "../api/recipes";
@@ -18,7 +19,9 @@ export default function FavoritesPage() {
 
         const data = await fetchRecipes();
 
-        const favorites = data.filter((recipe) => recipe.isFavorite);
+        const favorites = data.filter(
+          (recipe) => recipe.isFavorite,
+        );
 
         if (isMounted) {
           setRecipes(favorites);
@@ -27,7 +30,9 @@ export default function FavoritesPage() {
         console.error("Failed to load favorites:", err);
 
         if (isMounted) {
-          setError(err.message || "Failed to load favorites");
+          setError(
+            err.message || "Failed to load favorites",
+          );
         }
       } finally {
         if (isMounted) {
@@ -43,24 +48,53 @@ export default function FavoritesPage() {
     };
   }, []);
 
+  const dashboardLink = (
+    <Link
+      to="/dashboard"
+      className={[
+        "inline-flex items-center gap-2",
+        "text-sm font-semibold text-rv-plum",
+        "transition hover:opacity-75",
+        "focus:outline-none focus-visible:ring-2",
+        "focus-visible:ring-rv-plum focus-visible:ring-offset-2",
+        "rounded-lg",
+      ].join(" ")}
+    >
+      <span aria-hidden="true">←</span>
+      Back to Dashboard
+    </Link>
+  );
+
   if (isLoading) {
     return (
-      <section>
-        <PageHeader title="Favorites" description="Loading favorites..." />
+      <section className="space-y-4">
+        {dashboardLink}
+
+        <PageHeader
+          title="Favorites"
+          description="Loading favorites..."
+        />
       </section>
     );
   }
 
   if (error) {
     return (
-      <section>
-        <PageHeader title="Favorites" description={error} />
+      <section className="space-y-4">
+        {dashboardLink}
+
+        <PageHeader
+          title="Favorites"
+          description={error}
+        />
       </section>
     );
   }
 
   return (
     <section className="space-y-6">
+      {dashboardLink}
+
       <PageHeader
         title="Favorites"
         description="Your saved favorite recipes."
