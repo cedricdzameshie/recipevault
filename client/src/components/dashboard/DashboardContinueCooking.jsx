@@ -1,7 +1,5 @@
-import { Link } from "react-router-dom";
-import Card from "../common/Card";
-import Button from "../common/Button";
 import DashboardSection from "./DashboardSection";
+import QuickActionCard from "./QuickActionCard";
 
 export default function DashboardContinueCooking({
   recipe = null,
@@ -9,61 +7,54 @@ export default function DashboardContinueCooking({
   isLoading = false,
   onDismiss,
 }) {
+  if (!isLoading && !recipe) {
+    return null;
+  }
+
   return (
     <DashboardSection title="Continue Cooking">
-      <Card>
-        {isLoading ? (
-          <p className="text-sm text-stone-600">
-            Loading cooking session...
-          </p>
-        ) : recipe ? (
-          <div className="space-y-4">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h3 className="text-lg font-medium text-stone-900">
-                  {recipe.title}
-                </h3>
+      {isLoading ? (
+        <QuickActionCard
+          title="Loading cooking session..."
+          description="Checking your saved progress"
+          icon="▶"
+          variant="softPlum"
+          size="standard"
+        />
+      ) : (
+        <div className="relative">
+          <QuickActionCard
+            title={recipe.title}
+            description={`Resume from step ${currentStep}`}
+            to={`/recipes/${recipe.id}/cook?step=${currentStep}`}
+            icon="▶"
+            variant="primary"
+            size="standard"
+            className={onDismiss ? "pr-16" : ""}
+          />
 
-                <p className="mt-1 text-sm text-stone-600">
-                  Resume from step {currentStep}.
-                </p>
-              </div>
-
-              {onDismiss ? (
-                <button
-                  type="button"
-                  onClick={onDismiss}
-                  aria-label="Stop cooking and remove this session"
-                  title="Stop cooking"
-                  className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-stone-200 bg-white text-xl text-rv-plum transition hover:bg-stone-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-rv-plum focus-visible:ring-offset-2"
-                >
-                  ×
-                </button>
-              ) : null}
-            </div>
-
-            <div className="flex flex-wrap gap-3">
-              <Link to={`/recipes/${recipe.id}`}>
-                <Button variant="secondary">
-                  View Recipe
-                </Button>
-              </Link>
-
-              <Link
-                to={`/recipes/${recipe.id}/cook?step=${currentStep}`}
-              >
-                <Button>
-                  Continue Cooking
-                </Button>
-              </Link>
-            </div>
-          </div>
-        ) : (
-          <p className="text-sm text-stone-600">
-            No recent recipe to continue yet.
-          </p>
-        )}
-      </Card>
+          {onDismiss ? (
+            <button
+              type="button"
+              onClick={onDismiss}
+              aria-label={`Remove ${recipe.title} from Continue Cooking`}
+              title="Remove cooking session"
+              className={[
+                "absolute right-3 top-1/2 z-10",
+                "flex h-9 w-9 -translate-y-1/2 items-center justify-center",
+                "rounded-lg border border-white/30 bg-white/20",
+                "text-xl leading-none text-white",
+                "transition hover:bg-white/30",
+                "focus:outline-none focus-visible:ring-2",
+                "focus-visible:ring-white focus-visible:ring-offset-2",
+                "focus-visible:ring-offset-rv-plum",
+              ].join(" ")}
+            >
+              ×
+            </button>
+          ) : null}
+        </div>
+      )}
     </DashboardSection>
   );
 }
