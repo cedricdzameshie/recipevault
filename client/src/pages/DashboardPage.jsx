@@ -1,43 +1,39 @@
 import { useEffect, useMemo, useState } from "react";
 import DashboardWelcome from "../components/dashboard/DashboardWelcome";
-import DashboardContinueCooking from "../components/dashboard/DashboardContinueCooking";
 import { fetchRecipes } from "../api/recipes";
 import { fetchReminders } from "../api/reminders";
+
+function getSavedCookingSession() {
+  const storedSession = localStorage.getItem("continueCooking");
+
+  if (!storedSession) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(storedSession);
+  } catch (error) {
+    console.error(
+      "Failed to parse continue cooking session:",
+      error,
+    );
+
+    localStorage.removeItem("continueCooking");
+    return null;
+  }
+}
 
 export default function DashboardPage() {
   const [recipes, setRecipes] = useState([]);
   const [reminders, setReminders] = useState([]);
-  const [isLoadingRecipes, setIsLoadingRecipes] = useState(true);
   const [continueCookingSession, setContinueCookingSession] =
-    useState(null);
-
-  useEffect(() => {
-    const storedSession = localStorage.getItem("continueCooking");
-
-    if (!storedSession) {
-      return;
-    }
-
-    try {
-      const parsedSession = JSON.parse(storedSession);
-      setContinueCookingSession(parsedSession);
-    } catch (error) {
-      console.error(
-        "Failed to parse continue cooking session:",
-        error,
-      );
-
-      localStorage.removeItem("continueCooking");
-    }
-  }, []);
+    useState(getSavedCookingSession);
 
   useEffect(() => {
     let isMounted = true;
 
     async function loadRecipes() {
       try {
-        setIsLoadingRecipes(true);
-
         const data = await fetchRecipes();
 
         if (isMounted) {
@@ -51,10 +47,6 @@ export default function DashboardPage() {
 
         if (isMounted) {
           setRecipes([]);
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoadingRecipes(false);
         }
       }
     }
@@ -105,6 +97,11 @@ export default function DashboardPage() {
     );
   }, [continueCookingSession, recipes]);
 
+  const continueCookingStep =
+    continueCookingSession?.currentStep ??
+    continueCookingSession?.step ??
+    1;
+
   function handleDismissContinueCooking() {
     localStorage.removeItem("continueCooking");
     setContinueCookingSession(null);
@@ -114,20 +111,12 @@ export default function DashboardPage() {
     <section className="space-y-6">
       <DashboardWelcome
         reminderCount={activeReminders.length}
+        continueCookingRecipe={continueCookingRecipe}
+        continueCookingStep={continueCookingStep}
+        onDismissContinueCooking={
+          handleDismissContinueCooking
+        }
       />
-
-      {continueCookingRecipe ? (
-        <DashboardContinueCooking
-          recipe={continueCookingRecipe}
-          currentStep={
-            continueCookingSession?.currentStep ??
-            continueCookingSession?.step ??
-            1
-          }
-          isLoading={isLoadingRecipes}
-          onDismiss={handleDismissContinueCooking}
-        />
-      ) : null}
     </section>
   );
 }

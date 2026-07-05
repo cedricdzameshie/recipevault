@@ -50,7 +50,7 @@ export default function DashboardQuickActions({
   description="Saved recipes"
   to="/favorites"
   icon="♡"
-  variant="softCoral"
+  variant="softPink"
   size="compact"
 />
 
@@ -59,7 +59,7 @@ export default function DashboardQuickActions({
   description="Organize recipes"
   to="/folders"
   icon="▱"
-  variant="softTeal"
+  variant="softBlue"
   size="compact"
 />
 
@@ -68,16 +68,16 @@ export default function DashboardQuickActions({
   description={reminderDescription}
   to="/reminders"
   icon="◷"
-  variant="softPlum"
+  variant="softMagenta"
   size="compact"
   badge={reminderBadge}
 />
 
 <QuickActionCard
-  title="What’s in the Fridge?"
+  title="Fridge Ideas"
   description="Ingredient-based ideas"
   icon="◇"
-  variant="softBlue"
+  variant="softGreen"
   size="compact"
   badge="Soon"
 />
@@ -86,9 +86,19 @@ export default function DashboardQuickActions({
   title="Community"
   description="Recipes and photos"
   icon="◎"
-  variant="softWarm"
+  variant="softGold"
   size="compact"
   badge="Soon"
+/>
+
+<QuickActionCard
+  title="Feedback"
+  description="Share ideas or report issues"
+  icon="✎"
+  variant="softCream"
+  size="compact"
+  badge="Soon"
+  className="col-span-2 md:col-span-1"
 />
     </section>
   );

@@ -2,34 +2,34 @@ import { Link } from "react-router-dom";
 
 const variantClasses = {
   primary:
-    "border-rv-plum bg-rv-plum text-white hover:bg-rv-plum/90",
+  "border-rv-plum/45 bg-rv-plum/12 text-rv-plum hover:bg-rv-plum/18",
 
-  accent:
-    "border-rv-teal bg-rv-teal text-rv-plum hover:bg-rv-teal/90",
+accent:
+  "border-rv-teal/55 bg-rv-teal/22 text-rv-plum hover:bg-rv-teal/30",
 
-  secondary:
-    "border-amber-200 bg-amber-100 text-rv-plum hover:bg-amber-200",
+secondary:
+  "border-[#FFC400]/70 bg-[#FFF1B8] text-rv-plum hover:bg-[#FFE895]",
 
-  softPlum:
-    "border-rv-plum/20 bg-rv-plum/5 text-rv-plum hover:bg-rv-plum/10",
+  softPink:
+    "border-[#FF3F7F]/45 bg-[#FFD8E6] text-rv-plum hover:bg-[#FFC4DA]",
 
-  softTeal:
-    "border-rv-teal/40 bg-rv-teal/15 text-rv-plum hover:bg-rv-teal/20",
+  softBlue:
+    "border-[#150485]/35 bg-[#DCD8F4] text-rv-plum hover:bg-[#CCC6EE]",
 
-  softWarm:
-    "border-amber-200 bg-amber-50 text-rv-plum hover:bg-amber-100",
+  softMagenta:
+    "border-[#C62A88]/40 bg-[#F0CEE3] text-rv-plum hover:bg-[#E7B9D7]",
+
+  softGreen:
+    "border-[#03C4A1]/45 bg-[#D4F4EF] text-rv-plum hover:bg-[#BFECE5]",
+
+  softGold:
+    "border-[#FFC400]/70 bg-[#FFE8A3] text-rv-plum hover:bg-[#FFD978]",
+
+  softCream:
+    "border-[#E4DDC5] bg-[#F7F6E5] text-rv-plum hover:bg-[#F0EDD6]",
 
   neutral:
-    "border-stone-200 bg-white text-rv-plum hover:bg-stone-50",
-
-  softCoral:
-    "border-rv-coral/30 bg-rv-coral/10 text-rv-plum hover:bg-rv-coral/15",
-
-  softSage:
-    "border-emerald-200 bg-emerald-50 text-rv-plum hover:bg-emerald-100",  
-
-   softBlue:
-  "border-sky-200 bg-sky-50 text-rv-plum hover:bg-sky-100", 
+    "border-stone-300 bg-stone-100 text-rv-plum hover:bg-stone-200",
 };
 
 const sizeClasses = {
@@ -47,35 +47,34 @@ const iconSizeClasses = {
 
 const iconVariantClasses = {
   primary:
-    "bg-white/20 text-white",
+  "border border-rv-plum/25 bg-white/75 text-rv-plum",
 
-  accent:
-    "bg-white/25 text-rv-plum",
+accent:
+  "border border-rv-teal/30 bg-white/75 text-rv-plum",
 
-  secondary:
-    "bg-white/45 text-rv-plum",
+secondary:
+  "border border-[#FFC400]/60 bg-white/70 text-rv-plum",
 
-  softPlum:
-    "border border-rv-plum/10 bg-white/65 text-rv-plum",
-
-  softTeal:
-    "border border-rv-teal/20 bg-white/60 text-rv-plum",
-
-  softWarm:
-    "border border-amber-200/80 bg-white/65 text-rv-plum",
-
-  neutral:
-    "border border-stone-200 bg-stone-50 text-rv-plum",
-
-  softCoral:
-    "border border-rv-coral/20 bg-white/70 text-rv-plum",
-
-  softSage:
-    "border border-emerald-200 bg-white/70 text-rv-plum",  
+  softPink:
+    "border border-[#FF3F7F]/35 bg-white/75 text-rv-plum",
 
   softBlue:
-  "border border-sky-200 bg-white/70 text-rv-plum",  
-    
+    "border border-[#150485]/20 bg-white/75 text-rv-plum",
+
+  softMagenta:
+    "border border-[#C62A88]/30 bg-white/75 text-rv-plum",
+
+  softGreen:
+    "border border-[#03C4A1]/35 bg-white/75 text-rv-plum",
+
+  softGold:
+    "border border-[#FFC400]/65 bg-white/75 text-rv-plum",
+
+  softCream:
+    "border border-[#E4DDC5] bg-white/75 text-rv-plum",
+
+  neutral:
+    "border border-stone-300 bg-white text-rv-plum",
 };
 
 export default function QuickActionCard({
