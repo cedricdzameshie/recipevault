@@ -1,66 +1,74 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import Button from "../common/Button";
 import Card from "../common/Card";
+import DashboardQuickActions from "./DashboardQuickActions";
+import QuickActionCard from "./QuickActionCard";
 
-const quotes = [
-  "Small steps make great bakes.",
-  "Good things rise with time.",
-  "Every recipe gets better with practice.",
-  "Bake with patience.",
-];
-
-export default function DashboardWelcome() {
-  const [quoteIndex, setQuoteIndex] = useState(0);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setQuoteIndex((prev) => (prev + 1) % quotes.length);
-    }, 60000);
-
-    return () => clearInterval(interval);
-  }, []);
+export default function DashboardWelcome({
+  reminderCount = 0,
+  continueCookingRecipe = null,
+  continueCookingStep = 1,
+  onDismissContinueCooking,
+}) {
+  const dailyQuote = {
+    text: "Good things rise with time.",
+    category: "Kitchen Note",
+  };
 
   return (
-    <Card className="border-stone-300/70 bg-white/95 p-8 md:p-10">
-      <div className="space-y-6">
-        <div className="flex flex-col gap-6 xl:flex-row xl:items-center xl:justify-between">
-          <div className="space-y-3">
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-rv-plum/80">
-              RecipeVault
+    <Card className="border-stone-300/70 bg-white/95 p-5 sm:p-6 md:p-8">
+      <div className="space-y-4">
+        <div>
+          <h1 className="text-4xl font-bold tracking-tight text-rv-plum md:text-5xl">
+            Welcome!
+          </h1>
+
+          <div className="mt-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-rv-plum/65">
+              {dailyQuote.category}
             </p>
 
-            <div className="space-y-2">
-              <h1 className="text-4xl font-bold tracking-tight text-rv-plum md:text-5xl">
-                Welcome back, Chakas
-              </h1>
-
-              <p className="max-w-2xl text-base text-stone-600 md:text-lg">
-                Ready to bake something good today?
-              </p>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap gap-3">
-            <Link to="/recipes/new">
-              <Button>Add Recipe</Button>
-            </Link>
-
-            <Link to="/recipes">
-              <Button variant="secondary">Browse Recipes</Button>
-            </Link>
-
-            <Link to="/recipes/import">
-              <Button variant="accent">Import Recipe</Button>
-            </Link>
+            <p className="mt-1 text-sm font-semibold leading-6 text-rv-plum sm:text-base">
+              “{dailyQuote.text}”
+            </p>
           </div>
         </div>
 
-        <div className="rounded-2xl border border-rv-teal/30 bg-rv-teal/18 px-5 py-4">
-          <p className="text-base font-medium text-rv-plum">
-            {quotes[quoteIndex]}
-          </p>
-        </div>
+        {continueCookingRecipe ? (
+          <div className="relative">
+            <QuickActionCard
+              title="Continue Cooking"
+              description={`${continueCookingRecipe.title} · Step ${continueCookingStep}`}
+              to={`/recipes/${continueCookingRecipe.id}/cook?step=${continueCookingStep}`}
+              icon="▶"
+              variant="primary"
+              size="standard"
+              className={onDismissContinueCooking ? "pr-14" : ""}
+            />
+
+            {onDismissContinueCooking ? (
+              <button
+                type="button"
+                onClick={onDismissContinueCooking}
+                aria-label={`Remove ${continueCookingRecipe.title} from Continue Cooking`}
+                title="Remove cooking session"
+                className={[
+                  "absolute right-3 top-1/2 z-10",
+                  "flex h-8 w-8 -translate-y-1/2 items-center justify-center",
+                  "rounded-lg border border-rv-plum/20 bg-white/70",
+                  "text-lg leading-none text-rv-plum",
+                  "transition hover:bg-white",
+                  "focus:outline-none focus-visible:ring-2",
+                  "focus-visible:ring-rv-plum focus-visible:ring-offset-2",
+                ].join(" ")}
+              >
+                ×
+              </button>
+            ) : null}
+          </div>
+        ) : null}
+
+        <DashboardQuickActions
+          reminderCount={reminderCount}
+        />
       </div>
     </Card>
   );

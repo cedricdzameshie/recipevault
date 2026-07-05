@@ -125,12 +125,22 @@ setCurrentStepIndex(initialStepIndex);
     : 0;
 
   useEffect(() => {
-  if (!recipe || !currentStep || isFinished) return;
+  if (!recipe || !currentStep || isFinished) {
+    return;
+  }
 
   updateCookingProgress(recipe.id, {
     stepId: currentStep.id ?? null,
     stepNumber: currentStepNumber,
   });
+
+  localStorage.setItem(
+    "continueCooking",
+    JSON.stringify({
+      recipeId: recipe.id,
+      currentStep: currentStepNumber,
+    }),
+  );
 }, [recipe, currentStep, currentStepNumber, isFinished]);
 
 
@@ -196,6 +206,7 @@ function handleBatchScaleChange(nextScale) {
     } else {
       setIsFinished(true);
       clearCookingProgress(recipe.id);
+      localStorage.removeItem("continueCooking");
     }
   }
 

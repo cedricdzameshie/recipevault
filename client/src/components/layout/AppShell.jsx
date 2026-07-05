@@ -1,6 +1,5 @@
 import { useLocation } from "react-router-dom";
 import Topbar from "./Topbar";
-import BottomNav from "./BottomNav";
 
 export default function AppShell({ children }) {
   const location = useLocation();
@@ -22,13 +21,11 @@ export default function AppShell({ children }) {
         className={`mx-auto max-w-6xl px-4 ${
           isFocusMode
             ? "py-4 pb-8 md:py-6 md:pb-24"
-            : "py-6 pb-24"
+            : "py-6 pb-8"
         }`}
       >
         <div className="space-y-6">{children}</div>
       </main>
-
-      {!isFocusMode && <BottomNav />}
     </div>
   );
 }
