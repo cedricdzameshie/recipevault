@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import PageHeader from "../components/common/PageHeader";
 import RecipeForm from "../components/recipe-form/RecipeForm";
 import { createRecipe } from "../api/recipes";
 import { fetchFolders } from "../api/folders";
-import { useNavigate, useSearchParams } from "react-router-dom";
 import { normalizeIngredientUnit } from "../utils/ingredientUnits";
 
 function toNullableNumber(value) {
@@ -38,25 +38,25 @@ function buildRecipePayload(formValues) {
       }))
       .filter((ingredient) => ingredient.name),
     steps: (formValues.steps || [])
-  .filter((step) => step.instruction?.trim())
-  .map((step) => ({
-    instruction: step.instruction.trim(),
-    prepNote: step.prepNote?.trim() || "",
-    timerMinutes: toNullableNumber(step.timerMinutes),
-    ingredients: (step.ingredients || [])
-      .filter(
-        (ingredient) =>
-          ingredient.ingredient?.trim() ||
-          ingredient.quantity?.trim() ||
-          ingredient.unit?.trim(),
-      )
-      .map((ingredient) => ({
-        name: ingredient.ingredient?.trim() || "",
-        quantity: ingredient.quantity?.trim() || null,
-        unit: normalizeIngredientUnit(ingredient.unit) || null,
-      }))
-      .filter((ingredient) => ingredient.name),
-  })),
+      .filter((step) => step.instruction?.trim())
+      .map((step) => ({
+        instruction: step.instruction.trim(),
+        prepNote: step.prepNote?.trim() || "",
+        timerMinutes: toNullableNumber(step.timerMinutes),
+        ingredients: (step.ingredients || [])
+          .filter(
+            (ingredient) =>
+              ingredient.ingredient?.trim() ||
+              ingredient.quantity?.trim() ||
+              ingredient.unit?.trim()
+          )
+          .map((ingredient) => ({
+            name: ingredient.ingredient?.trim() || "",
+            quantity: ingredient.quantity?.trim() || null,
+            unit: normalizeIngredientUnit(ingredient.unit) || null,
+          }))
+          .filter((ingredient) => ingredient.name),
+      })),
   };
 }
 
@@ -66,6 +66,7 @@ export default function NewRecipePage() {
   const [folders, setFolders] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
+
   const initialFolderId = searchParams.get("folderId") || "";
 
   useEffect(() => {
@@ -108,16 +109,19 @@ export default function NewRecipePage() {
   }
 
   return (
-    <section className="space-y-6">
+    <section className="mx-auto w-full max-w-3xl space-y-4 pb-8 sm:space-y-6">
       <PageHeader
-        title="New Recipe"
-        description="Create and organize a new recipe."
-        backTo="/recipes"
-        backLabel="Back to Recipes"
+        title="Add Recipe"
+        description="Add the basics now, then organize the ingredients and cooking steps."
+        backTo="/dashboard"
+        backLabel="Back to Home"
       />
 
       {error ? (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div
+          role="alert"
+          className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 shadow-sm"
+        >
           {error}
         </div>
       ) : null}

@@ -9,7 +9,7 @@ function hasIngredientContent(ingredient) {
       ingredient.quantity?.trim() ||
       ingredient.unit?.trim() ||
       ingredient.ingredient?.trim() ||
-      ingredient.name?.trim(),
+      ingredient.name?.trim()
   );
 }
 
@@ -23,6 +23,21 @@ function formatIngredient(ingredient) {
     .join(" ");
 }
 
+function createCustomIngredientLabel(ingredient) {
+  return formatIngredient(ingredient) || "Custom ingredient — add details";
+}
+
+function getFirstEmptyCustomIngredient(ingredients) {
+  return ingredients.find(
+    (ingredient) =>
+      !ingredient.ingredientId &&
+      !ingredient.quantity?.trim() &&
+      !ingredient.unit?.trim() &&
+      !ingredient.ingredient?.trim() &&
+      !ingredient.name?.trim()
+  );
+}
+
 export default function StepIngredientsEditor({
   recipeIngredients = [],
   ingredients = [],
@@ -31,34 +46,37 @@ export default function StepIngredientsEditor({
   onAddLinkedIngredient,
   onRemoveIngredient,
 }) {
-  const [isExpanded, setIsExpanded] = useState(false);
   const [selectedRecipeIngredientId, setSelectedRecipeIngredientId] =
     useState("");
+  const [customIngredientId, setCustomIngredientId] = useState(null);
 
   const linkedIngredientIds = new Set(
     ingredients
       .map((ingredient) => ingredient.ingredientId)
-      .filter(Boolean),
+      .filter(Boolean)
   );
 
   const availableRecipeIngredients = recipeIngredients.filter(
     (ingredient) =>
-      ingredient.ingredient?.trim() &&
-      !linkedIngredientIds.has(ingredient.id),
+      ingredient.ingredient?.trim() && !linkedIngredientIds.has(ingredient.id)
   );
 
   const completedIngredients = ingredients.filter(hasIngredientContent);
-  const ingredientCount = completedIngredients.length;
 
-  const ingredientCountLabel =
-    ingredientCount === 1
-      ? "1 ingredient attached"
-      : `${ingredientCount} ingredients attached`;
+  const linkedStepIngredients = completedIngredients.filter(
+    (ingredient) => ingredient.ingredientId
+  );
+
+  const customStepIngredients = completedIngredients.filter(
+    (ingredient) => !ingredient.ingredientId
+  );
+
+  const activeCustomIngredient = ingredients.find(
+    (ingredient) => ingredient.id === customIngredientId
+  );
 
   function getRecipeIngredient(ingredientId) {
-    return recipeIngredients.find(
-      (ingredient) => ingredient.id === ingredientId,
-    );
+    return recipeIngredients.find((ingredient) => ingredient.id === ingredientId);
   }
 
   function getDisplayIngredient(stepIngredient) {
@@ -66,20 +84,9 @@ export default function StepIngredientsEditor({
       return stepIngredient;
     }
 
-    const recipeIngredient = getRecipeIngredient(
-      stepIngredient.ingredientId,
-    );
+    const recipeIngredient = getRecipeIngredient(stepIngredient.ingredientId);
 
     return recipeIngredient || stepIngredient;
-  }
-
-  function handleOpenEditor() {
-    setIsExpanded(true);
-  }
-
-  function handleAddIngredient() {
-    onAddIngredient();
-    setIsExpanded(true);
   }
 
   function handleAttachRecipeIngredient() {
@@ -87,9 +94,7 @@ export default function StepIngredientsEditor({
       return;
     }
 
-    const selectedIngredient = getRecipeIngredient(
-      selectedRecipeIngredientId,
-    );
+    const selectedIngredient = getRecipeIngredient(selectedRecipeIngredientId);
 
     if (!selectedIngredient) {
       return;
@@ -99,220 +104,142 @@ export default function StepIngredientsEditor({
     setSelectedRecipeIngredientId("");
   }
 
-  return (
-    <div className="rounded-2xl border border-stone-200 bg-stone-50 p-4">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          <h4 className="text-sm font-semibold text-stone-800">
-            Ingredients Used In This Step
-          </h4>
+  function handleAddCustomIngredient() {
+    const emptyIngredient = getFirstEmptyCustomIngredient(ingredients);
 
-          <p className="mt-1 text-sm text-stone-500">
-            {ingredientCountLabel}
+    if (emptyIngredient) {
+      setCustomIngredientId(emptyIngredient.id);
+      return;
+    }
+
+    const newIngredientId = onAddIngredient();
+
+    if (newIngredientId) {
+      setCustomIngredientId(newIngredientId);
+    }
+  }
+
+  function handleRemoveIngredient(ingredientId) {
+    onRemoveIngredient(ingredientId);
+
+    if (customIngredientId === ingredientId) {
+      setCustomIngredientId(null);
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      {completedIngredients.length > 0 ? (
+        <div className="space-y-2">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-stone-500">
+            Attached
           </p>
 
-          {!isExpanded && ingredientCount > 0 && (
-            <div className="mt-3 flex flex-wrap gap-2">
-              {completedIngredients.slice(0, 3).map((ingredient) => (
-                <span
-                  key={ingredient.id}
-                  className="rounded-full border border-stone-200 bg-white px-3 py-1 text-xs text-stone-700"
-                >
-                  {formatIngredient(
-                    getDisplayIngredient(ingredient),
-                  )}
-                </span>
-              ))}
-
-              {ingredientCount > 3 && (
-                <span className="rounded-full border border-stone-200 bg-white px-3 py-1 text-xs text-stone-500">
-                  +{ingredientCount - 3} more
-                </span>
-              )}
-            </div>
-          )}
-        </div>
-
-        {!isExpanded && (
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={handleOpenEditor}
-            aria-expanded={isExpanded}
-          >
-            {ingredientCount > 0
-              ? "Edit Ingredients"
-              : "Add Ingredients"}
-          </Button>
-        )}
-      </div>
-
-      {isExpanded && (
-        <div className="mt-4 space-y-4 border-t border-stone-200 pt-4">
-          <div className="rounded-2xl border border-purple-200 bg-purple-50/60 p-4">
-            <div>
-              <h5 className="text-sm font-semibold text-stone-800">
-                Use Recipe Ingredient
-              </h5>
-
-              <p className="mt-1 text-sm text-stone-500">
-                Attach an ingredient from the main recipe list so it
-                stays connected.
-              </p>
-            </div>
-
-            {availableRecipeIngredients.length > 0 ? (
-              <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
-                <label className="block flex-1 space-y-2">
-                  <span className="text-sm font-medium text-stone-700">
-                    Recipe ingredient
-                  </span>
-
-                  <select
-                    value={selectedRecipeIngredientId}
-                    onChange={(event) =>
-                      setSelectedRecipeIngredientId(
-                        event.target.value,
-                      )
-                    }
-                    className="w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-base text-stone-900 outline-none transition hover:border-stone-400 focus:border-purple-700 focus:ring-2 focus:ring-purple-100 sm:text-sm"
-                  >
-                    <option value="">Choose an ingredient</option>
-
-                    {availableRecipeIngredients.map((ingredient) => (
-                      <option
-                        key={ingredient.id}
-                        value={ingredient.id}
-                      >
-                        {formatIngredient(ingredient)}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <Button
-                  type="button"
-                  onClick={handleAttachRecipeIngredient}
-                  disabled={!selectedRecipeIngredientId}
-                >
-                  Attach Ingredient
-                </Button>
-              </div>
-            ) : (
-              <p className="mt-4 text-sm text-stone-500">
-                All recipe ingredients are already attached to this
-                step.
-              </p>
-            )}
-          </div>
-
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-stone-500">
-              Add a custom ingredient needed only during this step.
-            </p>
-
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={handleAddIngredient}
-            >
-              Add Custom Ingredient
-            </Button>
-          </div>
-
-          <div className="space-y-4">
-            {ingredients.map((ingredient, index) => {
-              const isLinkedIngredient = Boolean(
-                ingredient.ingredientId,
-              );
-
-              const displayIngredient =
-                getDisplayIngredient(ingredient);
+          <div className="space-y-2">
+            {linkedStepIngredients.map((ingredient) => {
+              const displayIngredient = getDisplayIngredient(ingredient);
 
               return (
                 <div
                   key={ingredient.id}
-                  className="rounded-2xl border border-stone-200 bg-white p-4"
+                  className="flex items-start justify-between gap-3 rounded-2xl border border-stone-200 bg-stone-50/80 px-4 py-3"
                 >
-                  <div className="mb-3 flex items-center justify-between gap-3">
-                    <div>
-                      <h5 className="text-sm font-medium text-stone-700">
-                        {isLinkedIngredient
-                          ? "Recipe Ingredient"
-                          : `Custom Step Ingredient ${index + 1}`}
-                      </h5>
+                  <div className="min-w-0">
+                    <p className="wrap-break-word text-sm font-bold text-stone-900">
+                      {formatIngredient(displayIngredient)}
+                    </p>
 
-                      {isLinkedIngredient && (
-                        <p className="mt-1 text-xs font-medium text-purple-700">
-                          Linked to the main recipe list
-                        </p>
-                      )}
-                    </div>
+                    <p className="mt-1 text-xs leading-5 text-stone-500">
+                      From the main recipe list
+                    </p>
+                  </div>
 
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveIngredient(ingredient.id)}
+                    className="shrink-0 text-sm font-medium text-stone-500 transition hover:text-red-600"
+                  >
+                    Remove
+                  </button>
+                </div>
+              );
+            })}
+
+            {customStepIngredients.map((ingredient) => {
+              const isEditing = customIngredientId === ingredient.id;
+
+              return (
+                <div
+                  key={ingredient.id}
+                  className="overflow-hidden rounded-2xl border border-stone-200 bg-stone-50/80"
+                >
+                  <div className="flex items-start justify-between gap-3 px-4 py-3">
                     <button
                       type="button"
                       onClick={() =>
-                        onRemoveIngredient(ingredient.id)
+                        setCustomIngredientId(isEditing ? null : ingredient.id)
                       }
-                      className="text-sm text-stone-500 transition hover:text-red-600"
+                      className="min-w-0 flex-1 text-left"
+                    >
+                      <p className="wrap-break-word text-sm font-bold text-stone-900">
+                        {createCustomIngredientLabel(ingredient)}
+                      </p>
+
+                      <p className="mt-1 text-xs leading-5 text-stone-500">
+                        Custom to this step
+                      </p>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveIngredient(ingredient.id)}
+                      className="shrink-0 text-sm font-medium text-stone-500 transition hover:text-red-600"
                     >
                       Remove
                     </button>
                   </div>
 
-                  {isLinkedIngredient ? (
-                    <div className="rounded-xl border border-purple-100 bg-purple-50 px-4 py-3">
-                      <p className="font-medium text-stone-800">
-                        {formatIngredient(displayIngredient)}
-                      </p>
-
-                      <p className="mt-1 text-xs text-stone-500">
-                        Quantity, unit, and name come from the main
-                        recipe ingredient.
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="grid gap-3 md:grid-cols-[120px_140px_1fr]">
-                      <Input
-                        label="Quantity"
-                        name="quantity"
-                        value={ingredient.quantity}
-                        onChange={(event) =>
-                          onIngredientChange(
-                            ingredient.id,
-                            "quantity",
-                            event.target.value,
-                          )
-                        }
-                        placeholder="2"
-                      />
-
-                      <label className="block space-y-2">
-                        <span className="text-sm font-medium text-stone-700">
-                          Unit
-                        </span>
-
-                        <select
-                          value={ingredient.unit}
+                  {isEditing ? (
+                    <div className="space-y-3 border-t border-stone-200 bg-white p-4">
+                      <div className="grid grid-cols-2 gap-3">
+                        <Input
+                          label="Quantity"
+                          name="quantity"
+                          value={ingredient.quantity}
                           onChange={(event) =>
                             onIngredientChange(
                               ingredient.id,
-                              "unit",
-                              event.target.value,
+                              "quantity",
+                              event.target.value
                             )
                           }
-                          className="w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-base text-stone-900 outline-none transition hover:border-stone-400 focus:border-purple-700 focus:ring-2 focus:ring-purple-100 sm:text-sm"
-                        >
-                          {INGREDIENT_UNIT_OPTIONS.map((unit) => (
-                            <option
-                              key={unit || "blank"}
-                              value={unit}
-                            >
-                              {unit || "No unit"}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
+                          placeholder="2"
+                        />
+
+                        <label className="block space-y-2">
+                          <span className="text-sm font-semibold text-stone-700">
+                            Unit
+                          </span>
+
+                          <select
+                            value={ingredient.unit}
+                            onChange={(event) =>
+                              onIngredientChange(
+                                ingredient.id,
+                                "unit",
+                                event.target.value
+                              )
+                            }
+                            className="w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-base text-stone-900 outline-none transition hover:border-stone-400 focus:border-rv-plum focus:ring-2 focus:ring-rv-plum/10 sm:text-sm"
+                          >
+                            {INGREDIENT_UNIT_OPTIONS.map((unit) => (
+                              <option key={unit || "blank"} value={unit}>
+                                {unit || "No unit"}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                      </div>
 
                       <Input
                         label="Ingredient"
@@ -322,36 +249,176 @@ export default function StepIngredientsEditor({
                           onIngredientChange(
                             ingredient.id,
                             "ingredient",
-                            event.target.value,
+                            event.target.value
                           )
                         }
                         placeholder="Eggs"
                       />
+
+                      <Button
+                        type="button"
+                        onClick={() => setCustomIngredientId(null)}
+                      >
+                        Done
+                      </Button>
                     </div>
-                  )}
+                  ) : null}
                 </div>
               );
             })}
           </div>
+        </div>
+      ) : (
+        <div className="rounded-2xl border border-dashed border-stone-300 bg-stone-50/80 px-4 py-5 text-center">
+          <p className="text-sm font-semibold text-stone-800">
+            No ingredients attached to this step yet.
+          </p>
 
-          <div className="flex flex-col-reverse gap-3 border-t border-stone-200 pt-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="mt-1 text-xs leading-5 text-stone-500">
+            Attach from the recipe list or add something custom only for this
+            step.
+          </p>
+        </div>
+      )}
+
+      <div className="rounded-2xl border border-stone-200 bg-white p-3">
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-stone-500">
+          Add from recipe
+        </p>
+
+        {availableRecipeIngredients.length > 0 ? (
+          <div className="mt-3 space-y-3">
+            <label className="block space-y-2">
+              <span className="text-sm font-semibold text-stone-700">
+                Recipe ingredient
+              </span>
+
+              <select
+                value={selectedRecipeIngredientId}
+                onChange={(event) =>
+                  setSelectedRecipeIngredientId(event.target.value)
+                }
+                className="w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-base text-stone-900 outline-none transition hover:border-stone-400 focus:border-rv-plum focus:ring-2 focus:ring-rv-plum/10 sm:text-sm"
+              >
+                <option value="">Choose an ingredient</option>
+
+                {availableRecipeIngredients.map((ingredient) => (
+                  <option key={ingredient.id} value={ingredient.id}>
+                    {formatIngredient(ingredient)}
+                  </option>
+                ))}
+              </select>
+            </label>
+
             <Button
               type="button"
-              variant="secondary"
-              onClick={handleAddIngredient}
+              onClick={handleAttachRecipeIngredient}
+              disabled={!selectedRecipeIngredientId}
             >
-              + Add Custom Ingredient
+              Attach Ingredient
             </Button>
+          </div>
+        ) : (
+          <p className="mt-2 text-sm leading-6 text-stone-500">
+            All recipe ingredients are already attached to this step.
+          </p>
+        )}
+      </div>
 
-            <Button
+      <button
+        type="button"
+        onClick={handleAddCustomIngredient}
+        className="flex w-full items-center justify-center rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm font-bold text-rv-plum transition hover:bg-stone-50"
+      >
+        + Add Custom Ingredient
+      </button>
+
+      {activeCustomIngredient &&
+      !customStepIngredients.some(
+        (ingredient) => ingredient.id === activeCustomIngredient.id
+      ) ? (
+        <div className="overflow-hidden rounded-2xl border border-rv-plum/20 bg-white shadow-sm shadow-stone-900/5">
+          <div className="flex items-start justify-between gap-3 px-4 py-3">
+            <div>
+              <p className="text-sm font-bold text-stone-900">
+                Custom ingredient
+              </p>
+
+              <p className="mt-1 text-xs leading-5 text-stone-500">
+                Only used during this step
+              </p>
+            </div>
+
+            <button
               type="button"
-              onClick={() => setIsExpanded(false)}
+              onClick={() => handleRemoveIngredient(activeCustomIngredient.id)}
+              className="shrink-0 text-sm font-medium text-stone-500 transition hover:text-red-600"
             >
+              Remove
+            </button>
+          </div>
+
+          <div className="space-y-3 border-t border-stone-200 bg-white p-4">
+            <div className="grid grid-cols-2 gap-3">
+              <Input
+                label="Quantity"
+                name="quantity"
+                value={activeCustomIngredient.quantity}
+                onChange={(event) =>
+                  onIngredientChange(
+                    activeCustomIngredient.id,
+                    "quantity",
+                    event.target.value
+                  )
+                }
+                placeholder="2"
+              />
+
+              <label className="block space-y-2">
+                <span className="text-sm font-semibold text-stone-700">
+                  Unit
+                </span>
+
+                <select
+                  value={activeCustomIngredient.unit}
+                  onChange={(event) =>
+                    onIngredientChange(
+                      activeCustomIngredient.id,
+                      "unit",
+                      event.target.value
+                    )
+                  }
+                  className="w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-base text-stone-900 outline-none transition hover:border-stone-400 focus:border-rv-plum focus:ring-2 focus:ring-rv-plum/10 sm:text-sm"
+                >
+                  {INGREDIENT_UNIT_OPTIONS.map((unit) => (
+                    <option key={unit || "blank"} value={unit}>
+                      {unit || "No unit"}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
+            <Input
+              label="Ingredient"
+              name="ingredient"
+              value={activeCustomIngredient.ingredient}
+              onChange={(event) =>
+                onIngredientChange(
+                  activeCustomIngredient.id,
+                  "ingredient",
+                  event.target.value
+                )
+              }
+              placeholder="Eggs"
+            />
+
+            <Button type="button" onClick={() => setCustomIngredientId(null)}>
               Done
             </Button>
           </div>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }
