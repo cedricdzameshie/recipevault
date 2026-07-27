@@ -387,35 +387,50 @@ return (
 </Card>
 
       <Card className="border-stone-300/70 bg-white/95">
-        <div className="grid gap-4 sm:grid-cols-3">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-rv-plum/60">
-              Servings
-            </p>
-            <p className="mt-2 text-2xl font-semibold text-rv-plum">
-              {recipe.servings ?? "—"}
-            </p>
-          </div>
+  <div className="space-y-4">
+    <div>
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-rv-plum/60">
+        Recipe Snapshot
+      </p>
 
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-rv-plum/60">
-              Prep Time
-            </p>
-            <p className="mt-2 text-2xl font-semibold text-rv-plum">
-              {recipe.prepTime ? `${recipe.prepTime} min` : "—"}
-            </p>
-          </div>
+      <h2 className="mt-1 text-2xl font-bold tracking-tight text-rv-plum">
+        Time & Servings
+      </h2>
+    </div>
 
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-rv-plum/60">
-              Cook Time
-            </p>
-            <p className="mt-2 text-2xl font-semibold text-rv-plum">
-              {recipe.cookTime ? `${recipe.cookTime} min` : "—"}
-            </p>
-          </div>
-        </div>
-      </Card>
+    <div className="grid gap-3 sm:grid-cols-3">
+      <div className="rounded-2xl border border-stone-200 bg-rv-cream/45 px-4 py-4">
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-rv-plum/60">
+          Servings
+        </p>
+
+        <p className="mt-2 text-2xl font-bold text-rv-plum">
+          {recipe.servings ?? "—"}
+        </p>
+      </div>
+
+      <div className="rounded-2xl border border-stone-200 bg-rv-cream/45 px-4 py-4">
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-rv-plum/60">
+          Prep
+        </p>
+
+        <p className="mt-2 text-2xl font-bold text-rv-plum">
+          {recipe.prepTime ? `${recipe.prepTime} min` : "—"}
+        </p>
+      </div>
+
+      <div className="rounded-2xl border border-stone-200 bg-rv-cream/45 px-4 py-4">
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-rv-plum/60">
+          Cook
+        </p>
+
+        <p className="mt-2 text-2xl font-bold text-rv-plum">
+          {recipe.cookTime ? `${recipe.cookTime} min` : "—"}
+        </p>
+      </div>
+    </div>
+  </div>
+</Card>
 
 <Card className="border-stone-300/70 bg-white/95">
   <div className="space-y-5">
@@ -642,13 +657,38 @@ return (
 </Card>
 
       <Card className="border-stone-300/70 bg-white/95">
-        <h2 className="text-2xl font-semibold tracking-tight text-rv-plum">
-          Notes
-        </h2>
-        <p className="mt-4 text-sm leading-6 text-stone-700">
-          {recipe.notes || "No notes yet."}
+  <div className="space-y-4">
+    <div>
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-rv-plum/60">
+        Extra Details
+      </p>
+
+      <h2 className="mt-1 text-2xl font-bold tracking-tight text-rv-plum">
+        Notes
+      </h2>
+
+      <p className="mt-2 text-sm leading-6 text-stone-500">
+        Tips, substitutions, storage notes, or reminders for next time.
+      </p>
+    </div>
+
+    {recipe.notes ? (
+      <div className="rounded-2xl border border-stone-200 bg-rv-cream/45 px-4 py-4">
+        <p className="whitespace-pre-line text-sm leading-7 text-stone-700">
+          {recipe.notes}
         </p>
-      </Card>
+      </div>
+    ) : (
+      <div className="rounded-2xl border border-dashed border-stone-300 bg-rv-cream/45 px-4 py-5 text-center">
+        <p className="text-sm font-semibold text-stone-800">No notes yet.</p>
+
+        <p className="mt-1 text-xs leading-5 text-stone-500">
+          Edit this recipe to add tips, reminders, or substitutions.
+        </p>
+      </div>
+    )}
+  </div>
+</Card>
     </section>
   );
 }
