@@ -309,150 +309,156 @@ function handleBatchScaleChange(nextScale) {
 
   const editUrl = `/recipes/${recipe.id}/edit?returnTo=cook&step=${currentStepNumber}`;
 
-return (
-  <section className="mx-auto max-w-3xl space-y-5 pb-8 sm:space-y-6">
-    <div className="flex items-center justify-between gap-6">
-      <div className="min-w-0 flex-1">
-        <CookingHeader
-          title={recipe.title}
-          currentStepNumber={currentStepNumber}
-          totalSteps={totalSteps}
-        />
-      </div>
 
-<div className="flex justify-end md:hidden">
-  <button
-    type="button"
-    onClick={handleFocusModeToggle}
-    aria-pressed={isFocusMode}
-    className={`inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-rv-plum focus:ring-offset-2 ${
-      isFocusMode
-        ? "bg-rv-plum text-white hover:bg-rv-plum/90"
-        : "border border-stone-200 bg-white text-rv-plum hover:bg-stone-50"
-    }`}
-  >
-    {isFocusMode ? "Exit Focus" : "Enter Focus Mode"}
-  </button>
-</div>
+  return (
+  <section className="mx-auto w-full max-w-3xl space-y-4 pb-8 sm:space-y-6">
+    <div className="rounded-3xl border border-stone-200 bg-white/95 p-4 shadow-sm shadow-stone-900/5 sm:p-5">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0 flex-1">
+          <CookingHeader
+            title={recipe.title}
+            currentStepNumber={currentStepNumber}
+            totalSteps={totalSteps}
+          />
+        </div>
 
-      <div className="hidden shrink-0 items-center gap-3 md:flex">
-        <Link
-          to={editUrl}
-          className="inline-flex h-11 items-center justify-center whitespace-nowrap rounded-xl border border-stone-200 bg-white px-5 text-sm font-medium text-rv-plum shadow-sm transition hover:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-rv-plum focus:ring-offset-2"
-        >
-          Edit Recipe
-        </Link>
-
-        <Link
-          to={`/recipes/${recipe.id}`}
-          className="inline-flex h-11 items-center justify-center whitespace-nowrap rounded-xl border border-stone-200 bg-white px-5 text-sm font-medium text-rv-plum shadow-sm transition hover:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-rv-plum focus:ring-offset-2"
-        >
-          Exit
-        </Link>
-      </div>
-    </div>
-
-      <div className="space-y-2">
-  <div className="flex items-center justify-between gap-4">
-    <p className="text-sm font-medium text-stone-600">
-      Cooking progress
-    </p>
-
-    <p className="text-sm font-semibold text-rv-plum">
-      {progressPercentage}%
-    </p>
-  </div>
-
-  <div
-    role="progressbar"
-    aria-label="Cooking progress"
-    aria-valuemin={0}
-    aria-valuemax={100}
-    aria-valuenow={progressPercentage}
-    aria-valuetext={`Step ${currentStepNumber} of ${totalSteps}`}
-    className="h-2.5 overflow-hidden rounded-full bg-stone-200"
-  >
-    <div
-      className="h-full rounded-full bg-rv-plum transition-all duration-300 ease-out"
-      style={{
-        width: `${progressPercentage}%`,
-      }}
-    />
-  </div>
-</div>
-
-<div className="rounded-2xl border border-stone-200 bg-white/80 p-4">
-  <div className="flex flex-wrap items-center justify-between gap-3">
-    <div>
-      <p className="text-sm font-semibold text-stone-900">
-        Batch size
-      </p>
-
-      <p className="mt-1 text-xs text-stone-500">
-        Ingredient quantities update automatically.
-      </p>
-    </div>
-
-    <div
-      className="inline-flex rounded-xl border border-stone-200 bg-white p-1"
-      aria-label="Batch size"
-    >
-      {BATCH_SCALES.map((scale) => {
-        const isActive = batchScale === scale;
-
-        return (
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <button
-            key={scale}
             type="button"
-            onClick={() => handleBatchScaleChange(scale)}
-            aria-pressed={isActive}
-            className={`min-h-10 min-w-12 rounded-lg px-3 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-rv-plum focus:ring-offset-2 ${
-              isActive
-                ? "bg-rv-plum text-white"
-                : "text-rv-plum hover:bg-stone-50"
+            onClick={handleFocusModeToggle}
+            aria-pressed={isFocusMode}
+            className={`inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-rv-plum focus:ring-offset-2 ${
+              isFocusMode
+                ? "bg-rv-plum text-white hover:bg-rv-plum/90"
+                : "border border-stone-200 bg-white text-rv-plum hover:bg-stone-50"
             }`}
           >
-            {scale}×
+            {isFocusMode ? "Exit Focus" : "Focus Mode"}
           </button>
-        );
-      })}
+
+          {!isFocusMode ? (
+            <Link
+              to={editUrl}
+              className="hidden h-11 items-center justify-center whitespace-nowrap rounded-xl border border-stone-200 bg-white px-4 text-sm font-semibold text-rv-plum transition hover:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-rv-plum focus:ring-offset-2 md:inline-flex"
+            >
+              Edit
+            </Link>
+          ) : null}
+
+          <Link
+            to={`/recipes/${recipe.id}`}
+            className="hidden h-11 items-center justify-center whitespace-nowrap rounded-xl border border-stone-200 bg-white px-4 text-sm font-semibold text-rv-plum transition hover:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-rv-plum focus:ring-offset-2 md:inline-flex"
+          >
+            Exit
+          </Link>
+        </div>
+      </div>
+
+      <div className="mt-5 space-y-2">
+        <div className="flex items-center justify-between gap-4">
+          <p className="text-sm font-medium text-stone-600">
+            Cooking progress
+          </p>
+
+          <p className="text-sm font-bold text-rv-plum">
+            {progressPercentage}%
+          </p>
+        </div>
+
+        <div
+          role="progressbar"
+          aria-label="Cooking progress"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={progressPercentage}
+          aria-valuetext={`Step ${currentStepNumber} of ${totalSteps}`}
+          className="h-2.5 overflow-hidden rounded-full bg-stone-200"
+        >
+          <div
+            className="h-full rounded-full bg-rv-plum transition-all duration-300 ease-out"
+            style={{
+              width: `${progressPercentage}%`,
+            }}
+          />
+        </div>
+      </div>
     </div>
-  </div>
-</div>
 
+    {!isFocusMode ? (
+      <div className="rounded-2xl border border-stone-200 bg-white/90 p-4 shadow-sm shadow-stone-900/5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-bold text-stone-900">Batch size</p>
 
-      <CookingStepCard
-  step={currentStep}
-  stepNumber={currentStepNumber}
-  checkedIngredientIds={checkedIngredientIds}
-  onIngredientToggle={handleIngredientToggle}
-  batchScale={batchScale}
-/>
+            <p className="mt-1 text-xs leading-5 text-stone-500">
+              Ingredient quantities update automatically.
+            </p>
+          </div>
 
-      <CookingControls
-        onPrevious={handlePrevious}
-        onNext={handleNext}
-        canGoPrevious={activeStepIndex > 0}
-        canGoNext={activeStepIndex < totalSteps - 1}
-      />
+          <div
+            className="grid grid-cols-4 rounded-xl border border-stone-200 bg-white p-1 sm:inline-grid"
+            aria-label="Batch size"
+          >
+            {BATCH_SCALES.map((scale) => {
+              const isActive = batchScale === scale;
 
-      <div className="flex flex-wrap items-center justify-center gap-2 pt-1 md:hidden">
-  <Link
-    to={editUrl}
-    className="inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-medium text-stone-600 transition hover:bg-white/70 hover:text-rv-plum focus:outline-none focus:ring-2 focus:ring-rv-plum focus:ring-offset-2"
-  >
-    Edit Recipe
-  </Link>
+              return (
+                <button
+                  key={scale}
+                  type="button"
+                  onClick={() => handleBatchScaleChange(scale)}
+                  aria-pressed={isActive}
+                  className={`min-h-10 rounded-lg px-3 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-rv-plum focus:ring-offset-2 ${
+                    isActive
+                      ? "bg-rv-plum text-white"
+                      : "text-rv-plum hover:bg-stone-50"
+                  }`}
+                >
+                  {scale}×
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    ) : null}
 
-  <span aria-hidden="true" className="h-5 w-px bg-stone-300" />
+    <CookingStepCard
+      step={currentStep}
+      stepNumber={currentStepNumber}
+      checkedIngredientIds={checkedIngredientIds}
+      onIngredientToggle={handleIngredientToggle}
+      batchScale={batchScale}
+    />
 
-  <Link
-    to={`/recipes/${recipe.id}`}
-    className="inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-medium text-stone-600 transition hover:bg-white/70 hover:text-rv-plum focus:outline-none focus:ring-2 focus:ring-rv-plum focus:ring-offset-2"
-  >
-    Exit Cooking Mode
-  </Link>
-</div>
-    </section>
-  );
+    <CookingControls
+      onPrevious={handlePrevious}
+      onNext={handleNext}
+      canGoPrevious={activeStepIndex > 0}
+      canGoNext={activeStepIndex < totalSteps - 1}
+    />
+
+    <div className="flex flex-wrap items-center justify-center gap-2 pt-1 md:hidden">
+      {!isFocusMode ? (
+        <>
+          <Link
+            to={editUrl}
+            className="inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-medium text-stone-600 transition hover:bg-white/70 hover:text-rv-plum focus:outline-none focus:ring-2 focus:ring-rv-plum focus:ring-offset-2"
+          >
+            Edit Recipe
+          </Link>
+
+          <span aria-hidden="true" className="h-5 w-px bg-stone-300" />
+        </>
+      ) : null}
+
+      <Link
+        to={`/recipes/${recipe.id}`}
+        className="inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-medium text-stone-600 transition hover:bg-white/70 hover:text-rv-plum focus:outline-none focus:ring-2 focus:ring-rv-plum focus:ring-offset-2"
+      >
+        Exit Cooking Mode
+      </Link>
+    </div>
+  </section>
+);
 }

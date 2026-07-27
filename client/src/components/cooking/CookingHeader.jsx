@@ -5,19 +5,19 @@ export default function CookingHeader({
 }) {
   return (
     <div className="min-w-0 space-y-3">
-      <span className="inline-flex rounded-full bg-rv-plum/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-rv-plum">
-        Cooking Mode
-      </span>
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="inline-flex rounded-full bg-rv-plum/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-rv-plum">
+          Cooking Mode
+        </span>
 
-      <div className="space-y-1">
-        <h1 className="wrap-break-word text-3xl font-semibold leading-tight text-stone-900 sm:text-4xl">
-          {title}
-        </h1>
-
-        <p className="text-sm font-medium text-stone-600">
+        <span className="inline-flex rounded-full border border-stone-200 bg-white px-3 py-1 text-xs font-semibold text-stone-600">
           Step {currentStepNumber} of {totalSteps}
-        </p>
+        </span>
       </div>
+
+      <h1 className="wrap-break-word text-2xl font-bold leading-tight text-stone-950 sm:text-4xl">
+        {title}
+      </h1>
     </div>
   );
 }
