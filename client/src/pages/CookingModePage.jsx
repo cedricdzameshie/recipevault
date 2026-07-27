@@ -133,14 +133,6 @@ setCurrentStepIndex(initialStepIndex);
     stepId: currentStep.id ?? null,
     stepNumber: currentStepNumber,
   });
-
-  localStorage.setItem(
-    "continueCooking",
-    JSON.stringify({
-      recipeId: recipe.id,
-      currentStep: currentStepNumber,
-    }),
-  );
 }, [recipe, currentStep, currentStepNumber, isFinished]);
 
 
@@ -204,10 +196,9 @@ function handleBatchScaleChange(nextScale) {
     if (activeStepIndex < recipe.steps.length - 1) {
       setCurrentStepIndex((prev) => prev + 1);
     } else {
-      setIsFinished(true);
-      clearCookingProgress(recipe.id);
-      localStorage.removeItem("continueCooking");
-    }
+  setIsFinished(true);
+  clearCookingProgress(recipe.id);
+}
   }
 
   function handleStartAgain() {

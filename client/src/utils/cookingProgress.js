@@ -32,7 +32,9 @@ function normalizeProgress(progress) {
     recipeId: progress.recipeId,
 
     // `step` supports the older RecipeVault saved format.
-    stepNumber: normalizeStepNumber(progress.stepNumber ?? progress.step ?? 1),
+    stepNumber: normalizeStepNumber(
+      progress.stepNumber ?? progress.step ?? progress.currentStep ?? 1,
+    ),
 
     // Stable step ID will protect resume behavior after step reordering.
     stepId: progress.stepId ?? null,
