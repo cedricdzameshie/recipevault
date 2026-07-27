@@ -55,6 +55,14 @@ export default function RecipesPage() {
     };
   }, []);
 
+  const selectedFolder = folders.find(
+    (folder) => folder.id === selectedFolderId
+  );
+
+  const hasActiveFilters = Boolean(
+    searchQuery.trim() || selectedFolderId || favoritesOnly
+  );
+
   const filteredRecipes = useMemo(() => {
     let nextRecipes = [...recipes];
 
@@ -62,12 +70,22 @@ export default function RecipesPage() {
       const normalizedQuery = searchQuery.trim().toLowerCase();
 
       nextRecipes = nextRecipes.filter((recipe) => {
-        const titleMatch = recipe.title?.toLowerCase().includes(normalizedQuery);
+        const folderName =
+          recipe.folder?.name ||
+          folders.find((folder) => folder.id === recipe.folderId)?.name ||
+          "";
+
+        const titleMatch = recipe.title
+          ?.toLowerCase()
+          .includes(normalizedQuery);
+
         const descriptionMatch = recipe.description
           ?.toLowerCase()
           .includes(normalizedQuery);
 
-        return titleMatch || descriptionMatch;
+        const folderMatch = folderName.toLowerCase().includes(normalizedQuery);
+
+        return titleMatch || descriptionMatch || folderMatch;
       });
     }
 
@@ -86,7 +104,7 @@ export default function RecipesPage() {
         new Date(b.updatedAt || b.createdAt) -
         new Date(a.updatedAt || a.createdAt)
     );
-  }, [recipes, searchQuery, favoritesOnly, selectedFolderId]);
+  }, [recipes, folders, searchQuery, favoritesOnly, selectedFolderId]);
 
   function clearFilters() {
     setSearchQuery("");
@@ -95,43 +113,89 @@ export default function RecipesPage() {
   }
 
   return (
-    <section className="space-y-6">
+    <section className="mx-auto w-full max-w-5xl space-y-5 pb-8 sm:space-y-6">
       <PageHeader
-        title="Recipes"
-        description="Browse, search, and organize your saved recipes."
+        title="Browse Recipes"
+        description="Search, filter, and open your saved recipes."
         backTo="/dashboard"
         backLabel="Back to Dashboard"
-        action={
-          <Link to="/recipes/new">
-            <Button>Add Recipe</Button>
-          </Link>
-        }
       />
 
-      <Card>
+      <Card className="border-stone-300/70 bg-white/95">
         <div className="space-y-4">
-          <div className="grid gap-4 lg:grid-cols-[2fr_1fr_auto]">
-            <Input
-              label="Search Recipes"
-              name="searchRecipes"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by title or description"
-            />
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-rv-plum/60">
+              Quick Actions
+            </p>
 
+            <h2 className="mt-1 text-xl font-bold tracking-tight text-stone-950">
+              Build your recipe vault
+            </h2>
+
+            <p className="mt-2 text-sm leading-6 text-stone-500">
+              Add a recipe manually or import one from text or a URL.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <Link to="/recipes/new" className="w-full">
+              <Button type="button">Add Recipe</Button>
+            </Link>
+
+            <Link to="/recipes/import" className="w-full">
+              <Button type="button" variant="secondary">
+                Import Recipe
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </Card>
+
+      <Card className="border-stone-300/70 bg-white/95">
+        <div className="space-y-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-rv-plum/60">
+                Find Recipes
+              </p>
+
+              <h2 className="mt-1 text-xl font-bold tracking-tight text-stone-950">
+                Search and filter
+              </h2>
+
+              <p className="mt-2 text-sm leading-6 text-stone-500">
+                Search by title, description, or folder.
+              </p>
+            </div>
+
+            <div className="rounded-full border border-stone-200 bg-rv-cream/60 px-3 py-1 text-sm font-semibold text-stone-600">
+              {filteredRecipes.length}{" "}
+              {filteredRecipes.length === 1 ? "recipe" : "recipes"}
+            </div>
+          </div>
+
+          <Input
+            label="Search Recipes"
+            name="searchRecipes"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search by title, description, or folder"
+          />
+
+          <div className="grid gap-3 lg:grid-cols-[1fr_auto]">
             <div className="space-y-2">
               <label
                 htmlFor="folderFilter"
-                className="text-sm font-medium text-stone-700"
+                className="text-sm font-semibold text-stone-700"
               >
-                Filter by Folder
+                Folder
               </label>
 
               <select
                 id="folderFilter"
                 value={selectedFolderId}
                 onChange={(e) => setSelectedFolderId(e.target.value)}
-                className="w-full rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-900 outline-none transition focus:border-stone-400"
+                className="w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-base text-stone-900 outline-none transition hover:border-stone-400 focus:border-rv-plum focus:ring-2 focus:ring-rv-plum/10 sm:text-sm"
               >
                 <option value="">All Folders</option>
 
@@ -149,41 +213,98 @@ export default function RecipesPage() {
                 variant={favoritesOnly ? "primary" : "secondary"}
                 onClick={() => setFavoritesOnly((prev) => !prev)}
               >
-                {favoritesOnly ? "Showing Favorites" : "Favorites Only"}
+                {favoritesOnly ? "Favorites On" : "Favorites Only"}
               </Button>
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-3">
-            <Button type="button" variant="secondary" onClick={clearFilters}>
-              Clear Filters
-            </Button>
+          {hasActiveFilters ? (
+            <div className="rounded-2xl border border-stone-200 bg-rv-cream/45 p-3">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex flex-wrap gap-2">
+                  {searchQuery.trim() ? (
+                    <span className="rounded-full border border-stone-200 bg-white px-3 py-1 text-xs font-medium text-stone-600">
+                      Search: {searchQuery.trim()}
+                    </span>
+                  ) : null}
 
-            <p className="self-center text-sm text-stone-600">
-              {filteredRecipes.length} recipe
-              {filteredRecipes.length === 1 ? "" : "s"} found
-            </p>
-          </div>
+                  {selectedFolder ? (
+                    <span className="rounded-full border border-stone-200 bg-white px-3 py-1 text-xs font-medium text-stone-600">
+                      Folder: {selectedFolder.name}
+                    </span>
+                  ) : null}
+
+                  {favoritesOnly ? (
+                    <span className="rounded-full border border-stone-200 bg-white px-3 py-1 text-xs font-medium text-stone-600">
+                      Favorites
+                    </span>
+                  ) : null}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  className="text-sm font-semibold text-rv-plum transition hover:text-rv-plum/75"
+                >
+                  Clear filters
+                </button>
+              </div>
+            </div>
+          ) : null}
         </div>
       </Card>
 
       {isLoading ? (
-        <Card>
+        <Card className="border-stone-300/70 bg-white/95">
           <p className="text-sm text-stone-600">Loading recipes...</p>
         </Card>
       ) : error ? (
-        <Card>
-          <p className="text-sm text-red-600">{error}</p>
+        <div
+          role="alert"
+          className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 shadow-sm"
+        >
+          {error}
+        </div>
+      ) : recipes.length === 0 ? (
+        <Card className="border-stone-300/70 bg-white/95">
+          <div className="space-y-4 text-center">
+            <div>
+              <h2 className="text-xl font-bold tracking-tight text-stone-950">
+                No recipes yet
+              </h2>
+
+              <p className="mt-2 text-sm leading-6 text-stone-500">
+                Add your first recipe manually or import one with AI.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <Link to="/recipes/new" className="w-full">
+                <Button type="button">Add Recipe</Button>
+              </Link>
+
+              <Link to="/recipes/import" className="w-full">
+                <Button type="button" variant="secondary">
+                  Import Recipe
+                </Button>
+              </Link>
+            </div>
+          </div>
         </Card>
       ) : filteredRecipes.length === 0 ? (
-        <Card>
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-stone-900">
-              No recipes matched your filters.
-            </p>
-            <p className="text-sm text-stone-600">
+        <Card className="border-stone-300/70 bg-white/95">
+          <div className="space-y-3 text-center">
+            <h2 className="text-xl font-bold tracking-tight text-stone-950">
+              No recipes found
+            </h2>
+
+            <p className="text-sm leading-6 text-stone-500">
               Try changing your search, folder filter, or favorites filter.
             </p>
+
+            <Button type="button" variant="secondary" onClick={clearFilters}>
+              Clear Filters
+            </Button>
           </div>
         </Card>
       ) : (
