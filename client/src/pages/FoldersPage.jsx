@@ -278,7 +278,7 @@ export default function FoldersPage() {
                     ) : (
                       <>
                         <div>
-  <h3 className="break-words text-xl font-bold tracking-tight text-rv-plum">
+  <h3 className="wrap-break-word text-xl font-bold tracking-tight text-rv-plum">
     {folder.name}
   </h3>
 

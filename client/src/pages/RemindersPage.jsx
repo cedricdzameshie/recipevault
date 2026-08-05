@@ -344,7 +344,7 @@ export default function RemindersPage() {
                   </div>
 
                   <h2
-                    className={`mt-3 break-words text-xl font-bold tracking-tight ${
+                    className={`mt-3 wrap-break-word text-xl font-bold tracking-tight ${
                       reminder.complete
                         ? "text-stone-500 line-through"
                         : "text-rv-plum"
