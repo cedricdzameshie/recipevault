@@ -7,6 +7,7 @@ import recipesRouter from "./routes/recipes.js";
 import foldersRouter from "./routes/folders.js";
 import remindersRouter from "./routes/reminders.js";
 import importRouter from "./routes/import.js";
+import feedbackRouter from "./routes/feedback.js";
 
 const app = express();
 
@@ -49,6 +50,7 @@ app.use("/api/recipes", recipesRouter);
 app.use("/api/folders", foldersRouter);
 app.use("/api/reminders", remindersRouter);
 app.use("/api/import", importRouter);
+app.use("/api/feedback", feedbackRouter);
 
 if (process.env.NODE_ENV === "production") {
   app.use(express.static(CLIENT_DIST_PATH));

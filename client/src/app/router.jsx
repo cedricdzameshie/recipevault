@@ -13,6 +13,7 @@ import NotFoundPage from "../pages/NotFoundPage";
 import RemindersPage from "../pages/RemindersPage";
 import FolderDetailPage from "../pages/FolderDetailPage";
 import ImportRecipePage from "../pages/ImportRecipePage";
+import FeedbackPage from "../pages/FeedbackPage";
 
 export const router = createBrowserRouter([
   { path: "/login", element: <LoginPage /> },
@@ -32,6 +33,7 @@ export const router = createBrowserRouter([
       { path: "reminders", element: <RemindersPage /> },
       { path: "folders/:id", element: <FolderDetailPage /> },
       { path: "recipes/import", element: <ImportRecipePage /> },
+      { path: "feedback", element: <FeedbackPage /> },
     ],
   },
   { path: "*", element: <NotFoundPage /> },

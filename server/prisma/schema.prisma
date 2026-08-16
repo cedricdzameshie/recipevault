@@ -87,3 +87,36 @@ model Reminder {
   recipeId String?
   recipe   Recipe? @relation(fields: [recipeId], references: [id], onDelete: SetNull)
 }
+
+enum FeedbackType {
+  PROBLEM
+  IDEA
+  OTHER
+}
+
+enum FeedbackStatus {
+  NEW
+  REVIEWING
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+  DECLINED
+}
+
+model Feedback {
+  id              String         @id @default(uuid())
+  type            FeedbackType
+  area            String
+  summary         String
+  details         String
+  submittedByName String
+  contactEmail    String?
+  pagePath        String?
+  userAgent       String?
+  viewportWidth   Int?
+  viewportHeight  Int?
+  status          FeedbackStatus @default(NEW)
+  emailSentAt     DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}

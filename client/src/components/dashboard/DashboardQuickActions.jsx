@@ -80,14 +80,13 @@ export default function DashboardQuickActions({ reminderCount = 0 }) {
       />
 
       <QuickActionCard
-        title="Feedback"
-        icon="✎"
-        variant="feedback"
-        size="compact"
-        badge="Soon"
-        mobileBadge="!"
-        className="col-span-2 md:col-span-1"
-      />
+  title="Feedback"
+  to="/feedback"
+  icon="✎"
+  variant="feedback"
+  size="compact"
+  className="col-span-2 md:col-span-1"
+/>
     </section>
   );
 }
